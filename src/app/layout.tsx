@@ -10,8 +10,8 @@ const martianMono = Martian_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GSO AIR Portal",
-  description: "General Services Office - Acceptance and Inspection Report Portal",
+  title: "Health Connect",
+  description: "Barangay Health Connect",
 };
 
 export default function RootLayout({

@@ -15,6 +15,7 @@ import { MdError } from "react-icons/md";
 import { auth, db } from "@/lib/firebase";
 import { Account } from "@/interface/user";
 import { useAccountStore } from "@/store/accountStore";
+import Image from "next/image";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -164,34 +165,31 @@ const LoginPage: React.FC = () => {
         setLoading(true);
 
         try {
-            // Step 1: Find admin user by username in Firestore
+            await signInWithEmailAndPassword(
+                auth,
+                formData.username,
+                formData.password
+            );
+
             const accountsRef = collection(db, "accounts");
             const q = query(
                 accountsRef,
-                where("username", "==", formData.username),
+                where("email", "==", formData.username),
                 limit(1)
             );
             const querySnapshot = await getDocs(q);
 
-            // Check if user exists
             if (querySnapshot.empty) {
                 throw new Error("Account not found");
             }
 
-            // Step 2: Extract admin data and validate email
             const accountData = querySnapshot.docs[0].data() as Account;
             if (!accountData.email) {
                 throw new Error("Account not found");
             }
 
-            // Step 3: Authenticate with Firebase Auth using email/password
-            await signInWithEmailAndPassword(
-                auth,
-                accountData.email,
-                formData.password
-            );
 
-            // Step 4: Save admin data to global store and redirect based on role
+
             setAccount(accountData);
             if (accountData.role === "admin") {
                 router.push("/admin/dashboard");
@@ -283,7 +281,7 @@ const LoginPage: React.FC = () => {
                                 // For unknown Firebase errors, show a generic but helpful message
                                 if (err.message.includes("Account not found")) {
                                     errorMessage =
-                                        "Username not found. Please check your username and try again.";
+                                        "Email not found. Please check your email and try again.";
                                 } else {
                                     errorMessage =
                                         "Authentication failed. Please check your credentials and try again.";
@@ -293,7 +291,7 @@ const LoginPage: React.FC = () => {
                         // Handle general errors (non-Firebase Auth errors)
                         if (err.message.includes("Account not found")) {
                             errorMessage =
-                                "Username not found. Please check your username and try again.";
+                                "Email not found. Please check your email and try again.";
                         } else if (
                             err.message.includes("network") ||
                             err.message.includes("fetch")
@@ -322,33 +320,36 @@ const LoginPage: React.FC = () => {
     // ========================================================================
 
     return (
-        <div className="min-h-screen bg-[#ffffff] flex items-center justify-center p-4 animate-gradient-x">
+        <div className="min-h-screen bg-gradient-to-bl from-primary to-accent flex items-center justify-center p-4 animate-gradient-x">
             <div className="w-full max-w-md space-y-8 transform hover:scale-[1.01] transition-transform duration-300">
                 {/* Header Section */}
                 <div className="text-center space-y-4">
                     <div className="relative mx-auto w-20 h-20">
-                        <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl animate-pulse"></div>
-                        <div className="relative bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center h-full shadow-lg">
-                            <HiShieldCheck className="w-10 h-10 text-white animate-bounce" />
-                        </div>
+                        <Image
+                            src="/img/logo.png"
+                            alt="Barangay Health Connect"
+                            width={100}
+                            height={100}
+                            className="object-contain border-4 shadow-lg border-white rounded-full"
+                        />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent martian-mono">
+                        <h1 className="text-3xl font-extrabold text-white martian-mono">
                             Barangay Health Connect
                         </h1>
-                        <p className="text-xs text-gray-500 mt-2 martian-mono">
+                        <p className="text-xs text-gray-200 mt-2 martian-mono">
                             Login Page
                         </p>
                     </div>
                 </div>
 
                 {/* Login Form Card */}
-                <div className="card w-80 bg-white mx-auto shadow-lg martian-mono text-xs border border-base-300">
+                <div className="card w-80 rounded-none bg-white mx-auto shadow-lg martian-mono text-xs border border-base-300">
                     <div className="card-body p-8">
                         <form onSubmit={handleLogin} className="space-y-10">
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text text-zinc-600 font-medium text-xs mb-2">
+                                    <span className="label-text text-zinc-500 font-medium text-xs mb-2">
                                         Username
                                     </span>
                                 </label>
@@ -369,7 +370,7 @@ const LoginPage: React.FC = () => {
 
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text text-zinc-600 font-medium text-xs mb-2">
+                                    <span className="label-text text-zinc-500 font-medium text-xs mb-2">
                                         Password
                                     </span>
                                 </label>
@@ -412,7 +413,7 @@ const LoginPage: React.FC = () => {
                             {error && (
                                 <div className="alert alert-error shadow-lg text-error-content animate-shake">
                                     <MdError className="w-6 h-6" />
-                                    <span className="text-sm font-medium text-white">
+                                    <span className="text-xs font-medium text-white">
                                         {error}
                                     </span>
                                 </div>
@@ -440,14 +441,14 @@ const LoginPage: React.FC = () => {
                 </div>
 
                 <div className="text-center space-y-2">
-                    <p className="text-xs text-base-content/60">
+                    <p className="text-xs text-zinc-200">
                         Secure login access • Protected by
                         authentication
                     </p>
                     <div className="flex justify-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce"></div>
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-200"></div>
-                        <div className="w-2 h-2 rounded-full bg-primary animate-bounce delay-400"></div>
+                        <div className="w-2 h-2 rounded-full bg-white animate-bounce"></div>
+                        <div className="w-2 h-2 rounded-full bg-white animate-bounce delay-200"></div>
+                        <div className="w-2 h-2 rounded-full bg-white animate-bounce delay-400"></div>
                     </div>
                 </div>
             </div>

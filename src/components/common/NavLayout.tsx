@@ -12,7 +12,8 @@ import {
 import { auth } from "@/lib/firebase";
 import NavigationItem, { NavigationItemProps } from "./NavigationItem";
 import { useNavStore } from "@/store/navStore";
-import { HiClipboardDocumentCheck } from "react-icons/hi2";
+import { useAccountStore } from "@/store/accountStore";
+import Image from "next/image";
 
 // Types and Interfaces
 interface NavLayoutProps {
@@ -37,6 +38,7 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
     const router = useRouter();
     const { isMobileMenuOpen, setIsMobileMenuOpen } = useNavStore();
     const [showSecondary, setShowSecondary] = useState(false);
+    const { account } = useAccountStore();
 
     /**
      * Handles user logout
@@ -67,25 +69,27 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
 
             {/* Sidebar */}
             <div
-                className={`fixed lg:static w-80 bg-gradient-to-b from-primary to-secondary shadow-xl flex flex-col h-full z-40 transition-transform duration-300 ${
+                className={`fixed lg:static w-80 bg-gradient-to-t from-primary to-secondary shadow-xl flex flex-col h-full z-40 border-r border-primary-content/20 transition-transform duration-300 ${
                     isMobileMenuOpen
                         ? "translate-x-0"
                         : "-translate-x-full lg:translate-x-0"
                 }`}
             >
                 {/* Header Section */}
-                <div className="p-6 border-b border-primary-content/20">
+                <div className="p-6">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <HiClipboardDocumentCheck className="w-10 h-10 text-white" />
-                        </div>
+                        <Image
+                            src="/img/logo.png"
+                            alt="Barangay Health Connect"
+                            width={80}
+                            height={80}
+                            className="object-contain border-4 shadow-lg border-white rounded-full"
+                        />
                         <div>
                             <h2 className="text-xl font-bold text-white">
-                                GSO AIR 
+                                Barangay Health Connect
                             </h2>
-                            <p className="text-primary-content/80 text-xs">
-                                Acceptance and Inspection Report
-                            </p>
+                            <p className="text-xs text-white">Stay Connected, Stay Healthy</p>
                         </div>
                     </div>
                 </div>
@@ -146,6 +150,29 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
 
             {/* Main Content Area */}
             <div className="flex-1 overflow-hidden bg-base-50">
+                {/* Top Header */}
+                <header className="sticky top-0 z-20 bg-secondary text-white shadow">
+                    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
+                        <div className="items-center gap-3 md:mr-0 md:ml-auto  flex flex-row-reverse md:flex-row">
+                            <div className="text-left md:text-right leading-tight">
+                                <div className="text-sm sm:text-base font-extrabold">
+                                    {account?.role ? account.role.charAt(0).toUpperCase() + account.role.slice(1) : ''}
+                                </div>
+                                <div className="text-[10px] sm:text-xs opacity-90">
+                                    {account?.email ?? ""}
+                                </div>
+                            </div>
+                            <Image
+                                src="/img/logo.png"
+                                alt="User Badge"
+                                width={36}
+                                height={36}
+                                className="object-contain border-2 shadow border-white rounded-full"
+                            />
+                        </div>
+                    </div>
+                </header>
+
                 <div className="h-full overflow-y-auto">
                     <div className="p-4 lg:p-8">
                         <div className="max-w-7xl mx-auto martian-mono">
