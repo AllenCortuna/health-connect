@@ -145,16 +145,6 @@ const MedicinePDF = ({ medicine }: { medicine: Medicine }) => {
           <Text style={styles.sectionTitle}>Inventory Information</Text>
           <View style={styles.row}>
             <View style={styles.column}>
-              <Text style={styles.label}>Quantity</Text>
-              <Text style={styles.value}>{medicine.quantity}</Text>
-            </View>
-            <View style={styles.column}>
-              <Text style={styles.label}>Price</Text>
-              <Text style={styles.value}>₱{medicine.price.toFixed(2)}</Text>
-            </View>
-          </View>
-          <View style={styles.row}>
-            <View style={styles.column}>
               <Text style={styles.label}>Expiry Date</Text>
               <Text style={styles.value}>{formatDate(medicine.expDate)}</Text>
             </View>
@@ -338,12 +328,6 @@ const ViewMedicineModal: React.FC<ViewMedicineModalProps> = ({ medicine, isOpen,
                   <p className={`text-sm font-medium ${medicine.quantity <= 10 ? 'text-error' : medicine.quantity <= 50 ? 'text-warning' : 'text-success'}`}>
                     {medicine.quantity}
                   </p>
-                </div>
-                <div>
-                  <label className="label">
-                    <span className="label-text text-xs font-semibold">Price</span>
-                  </label>
-                  <p className="text-sm font-medium">₱{medicine.price.toFixed(2)}</p>
                 </div>
                 <div>
                   <label className="label">
