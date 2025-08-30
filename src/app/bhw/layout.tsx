@@ -10,7 +10,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   const primaryNavItems: NavigationItemProps[] = [
     { href: "/bhw/dashboard", icon: HiHome, label: "Dashboard"},
     { href: "/bhw/resident", icon: HiUserGroup, label: "Update Resident"},
-    { href: "/bhw/medicines", icon: HiBeaker, label: "Track Medicines"},
+    { href: "/bhw/medicine", icon: HiBeaker, label: "Track Medicines"},
     { href: "/bhw/announcements", icon: HiBell, label: "Announcements"},
     { href: "/bhw/reports", icon: HiPrinter, label: "Print Reports"},
     { href: "/bhw/settings", icon: IoMdSettings, label: "Settings"},

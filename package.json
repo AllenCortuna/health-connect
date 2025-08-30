@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.10.0",
     "idb-keyval": "^6.2.2",

@@ -12,7 +12,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
     { href: "/admin/resident", icon: HiUserGroup, label: "Resident"},
     { href: "/admin/bhw", icon: HiUsers, label: "BHW"},
     { href: "/admin/messages", icon: HiChatBubbleLeftRight, label: "Messages"},
-    { href: "/admin/medicines", icon: HiBeaker, label: "Medicines"},
+    { href: "/admin/medicine", icon: HiBeaker, label: "Medicines"},
     { href: "/admin/reports", icon: HiDocumentReport, label: "Reports"},
     { href: "/admin/settings", icon: HiCog6Tooth, label: "Settings"},
   ];

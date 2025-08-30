@@ -41,15 +41,15 @@
 
   /* border radius */
   --radius-selector: 1rem;
-  --radius-field: 0.25rem;
-  --radius-box: 0.5rem;
+  --radius-field: 0rem;
+  --radius-box: 0rem;
 
   /* base sizes */
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
 
   /* border size */
-  --border: 2px;
+  --border: 1.5px;
 
   /* effects */
   --depth: 1;
