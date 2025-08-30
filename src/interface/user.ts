@@ -30,11 +30,23 @@ export interface Resident {
     gender: 'male' | 'female';
     status: 'child' | 'adult' | 'senior' | 'pwd' | 'pregnant';
     contactNumber?: string;
-    email: string;
+    email?: string;
     createdAt?: Date | { toDate: () => Date };
     height?: number;
     weight?: number;
     bloodType?: string;
     houseNo?: string;
     spouseName?: string;
+}
+
+export interface BHW{
+    id: string;
+    email?: string;
+    name?: string;
+    contactNumber?: string;
+    address?: string;
+    age: number;
+    gender: 'male' | 'female';
+    status: 'single' | 'married' | 'widowed' | 'separated' | 'divorced';
+    createdAt?: Date | { toDate: () => Date };
 }

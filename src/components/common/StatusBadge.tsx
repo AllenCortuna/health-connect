@@ -8,6 +8,7 @@ interface StatusBadgeProps {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
+      // Resident statuses
       case 'child':
         return 'badge badge-primary whitespace-nowrap'
       case 'adult':
@@ -18,6 +19,19 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
         return 'badge badge-error whitespace-nowrap'
       case 'pregnant':
         return 'badge badge-info whitespace-nowrap'
+      
+      // BHW statuses
+      case 'single':
+        return 'badge badge-primary whitespace-nowrap'
+      case 'married':
+        return 'badge badge-success whitespace-nowrap'
+      case 'widowed':
+        return 'badge badge-warning whitespace-nowrap'
+      case 'separated':
+        return 'badge badge-error whitespace-nowrap'
+      case 'divorced':
+        return 'badge badge-info whitespace-nowrap'
+      
       default:
         return 'badge badge-ghost whitespace-nowrap'
     }
