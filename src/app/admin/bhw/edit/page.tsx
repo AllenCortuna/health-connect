@@ -16,11 +16,12 @@ const EditBHW = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [bhw, setBhw] = useState<BHW | null>(null)
-  const [formData, setFormData] = useState<Omit<Partial<BHW>, 'createdAt'>>({
+  const [formData, setFormData] = useState<Omit<Partial<BHW>, 'createdAt' | 'birthDate'> & { birthDate: string }>({
     name: '',
+    email: '',
     contactNumber: '',
     address: '',
-    age: 18,
+    birthDate: '',
     gender: 'male',
     status: 'single'
   })
@@ -62,9 +63,10 @@ const EditBHW = () => {
         // Set form data
         setFormData({
           name: bhwData.name || '',
+          email: bhwData.email || '',
           contactNumber: bhwData.contactNumber || '',
           address: bhwData.address || '',
-          age: bhwData.age || 18,
+          birthDate: bhwData.birthDate,
           gender: bhwData.gender || 'male',
           status: bhwData.status || 'single'
         })
@@ -86,15 +88,15 @@ const EditBHW = () => {
 
     if (!formData.name?.trim()) newErrors.name = 'Name is required'
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
-    
+    if (!formData.email?.trim()) newErrors.email = 'Email is required'
     // Contact number validation (optional but if provided, should be valid)
     if (formData.contactNumber && !/^(\+63|0)?[0-9]{10,11}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
       newErrors.contactNumber = 'Please enter a valid contact number'
     }
 
-    // Age validation
-    if (formData.age && (formData.age < 18 || formData.age > 100)) {
-      newErrors.age = 'Age must be between 18 and 100 years'
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address'
     }
 
     setErrors(newErrors)
@@ -105,7 +107,7 @@ const EditBHW = () => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'age' ? parseInt(value) || 18 : value
+      [name]: name === 'birthDate' ? value : value
     }))
     
     // Clear error when user starts typing
@@ -128,6 +130,7 @@ const EditBHW = () => {
       const bhwRef = doc(db, 'accounts', bhwId!)
       await updateDoc(bhwRef, {
         ...formData,
+        birthDate: formData.birthDate ? new Date(formData.birthDate) : undefined,
         updatedAt: new Date()
       })
       
@@ -199,6 +202,21 @@ const EditBHW = () => {
                 />
                 {errors.name && <span className="label-text-alt text-error">{errors.name}</span>}
               </div>
+
+              <div className="form-control flex flex-col">
+                <label className="label">
+                  <span className="label-text font-semibold text-xs">Email *</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`input input-bordered ${errors.email ? 'input-error' : ''}`}
+                  placeholder="Enter Email Address"
+                />
+                {errors.email && <span className="label-text-alt text-error">{errors.email}</span>}
+              </div>
             </div>
 
             {/* Contact Information */}
@@ -220,19 +238,17 @@ const EditBHW = () => {
 
               <div className="form-control flex flex-col">
                 <label className="label">
-                  <span className="label-text font-semibold text-xs">Age *</span>
+                  <span className="label-text font-semibold text-xs">Birth Date *</span>
                 </label>
                 <input
-                  type="number"
-                  name="age"
-                  value={formData.age}
+                  type="date"
+                  name="birthDate"
+                  value={formData.birthDate}
                   onChange={handleInputChange}
-                  min="18"
-                  max="100"
-                  className={`input input-bordered ${errors.age ? 'input-error' : ''}`}
-                  placeholder="Enter Age"
+                  className={`input input-bordered ${errors.birthDate ? 'input-error' : ''}`}
+                  placeholder="Enter Birth Date"
                 />
-                {errors.age && <span className="label-text-alt text-error">{errors.age}</span>}
+                {errors.birthDate && <span className="label-text-alt text-error">{errors.birthDate}</span>}
               </div>
             </div>
 

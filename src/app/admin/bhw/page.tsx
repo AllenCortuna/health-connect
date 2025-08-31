@@ -9,6 +9,7 @@ import { FaPlus, FaTrash } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
 import Link from 'next/link'
 import { successToast, errorToast } from '@/lib/toast'
+import { format, isValid } from 'date-fns'
 
 const AdminBHW = () => {
   const router = useRouter()
@@ -20,6 +21,26 @@ const AdminBHW = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [genderFilter, setGenderFilter] = useState<string>('all')
+
+  // Helper function to safely format dates
+  const formatDate = (date: unknown): string => {
+    if (!date) return 'N/A'
+    
+    try {
+      // If it's a Firestore Timestamp, convert it
+      const jsDate = (date as { toDate?: () => Date })?.toDate?.() || date
+      
+      // Check if it's a valid date and is a Date object
+      if (jsDate instanceof Date && isValid(jsDate)) {
+        return format(jsDate, 'MM/dd/yyyy')
+      }
+      
+      return 'N/A'
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return 'N/A'
+    }
+  }
 
   useEffect(() => {
     fetchBHWs()
@@ -39,7 +60,8 @@ const AdminBHW = () => {
           bhwsData.push({
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toDate?.() || data.createdAt
+            createdAt: data.createdAt?.toDate?.() || data.createdAt,
+            birthDate: data.birthDate?.toDate?.() || data.birthDate
           } as BHW)
         }
       })
@@ -224,7 +246,7 @@ const AdminBHW = () => {
                     <th>Email</th>
                     <th>Status</th>
                     <th>Gender</th>
-                    <th>Age</th>
+                    <th>Birth Date</th>
                     <th>Contact</th>
                     <th>Actions</th>
                   </tr>
@@ -249,7 +271,7 @@ const AdminBHW = () => {
                         </div>
                       </td>
                       <td>
-                        {bhw.age || 'N/A'}
+                        {formatDate(bhw.birthDate)}
                       </td>
                       <td>
                         {bhw.contactNumber || 'N/A'}

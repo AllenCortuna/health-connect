@@ -16,6 +16,8 @@ import { auth, db } from "@/lib/firebase";
 import { Account } from "@/interface/user";
 import { useAccountStore } from "@/store/accountStore";
 import Image from "next/image";
+import Link from "next/link";
+// import Link from "next/link";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -321,6 +323,9 @@ const LoginPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-bl from-primary to-accent flex items-center justify-center p-4 animate-gradient-x">
+            <Link href="/sign-up/bhw" className="btn btn-xs btn-secondary absolute top-4 right-4">
+                    Sign Up as BHW
+            </Link>
             <div className="w-full max-w-md space-y-8 transform hover:scale-[1.01] transition-transform duration-300">
                 {/* Header Section */}
                 <div className="text-center space-y-4">

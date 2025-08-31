@@ -45,7 +45,7 @@ export interface BHW{
     name?: string;
     contactNumber?: string;
     address?: string;
-    age: number;
+    birthDate: string;
     gender: 'male' | 'female';
     status: 'single' | 'married' | 'widowed' | 'separated' | 'divorced';
     createdAt?: Date | { toDate: () => Date };

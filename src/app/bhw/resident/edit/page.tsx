@@ -305,7 +305,7 @@ const EditResident = () => {
                 {errors.lastName && <span className="label-text-alt text-error">{errors.lastName}</span>}
               </div>
 
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Suffix</span>
                 </label>
@@ -322,7 +322,7 @@ const EditResident = () => {
 
             {/* Personal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Birth Date *</span>
                 </label>
@@ -335,7 +335,7 @@ const EditResident = () => {
                 />
               </div>
 
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Gender *</span>
                 </label>
@@ -367,7 +367,7 @@ const EditResident = () => {
                 {errors.birthPlace && <span className="label-text-alt text-error">{errors.birthPlace}</span>}
               </div>
 
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Status *</span>
                 </label>
@@ -388,7 +388,7 @@ const EditResident = () => {
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Email *</span>
                 </label>
@@ -403,7 +403,7 @@ const EditResident = () => {
                 {errors.email && <span className="label-text-alt text-error">{errors.email}</span>}
               </div>
 
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Contact Number</span>
                 </label>
@@ -420,7 +420,7 @@ const EditResident = () => {
             </div>
 
             {/* Address */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs">Complete Address *</span>
               </label>
@@ -495,7 +495,7 @@ const EditResident = () => {
             </div>
 
             {/* Spouse Information */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs">Spouse Name</span>
               </label>

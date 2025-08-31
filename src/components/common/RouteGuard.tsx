@@ -9,6 +9,7 @@ import { Account } from "@/interface/user";
 import Loading from "./Loading";
 import { useAccountStore } from "@/store/accountStore";
 import { warningToast } from "@/lib/toast";
+import EmailVerificationPrompt from "./EmailVerificationPrompt";
 
 /**
  * Props for the RouteGuard component
@@ -43,6 +44,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children, role , collectionName
     // Component state
     const [loading, setLoading] = useState(true);
     const [authenticated, setAuthenticated] = useState(false);
+    const [emailVerified, setEmailVerified] = useState(false);
     
     // Hooks
     const router = useRouter();
@@ -86,22 +88,36 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children, role , collectionName
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             try {
                 if (user?.email) {
-                    // User is authenticated - check admin privileges
+                    // Check if email is verified
+                    if (!user.emailVerified) {
+                        setEmailVerified(false);
+                        setAuthenticated(true); // User is authenticated but email not verified
+                        setAccount(null);
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    // User is authenticated and email is verified - check admin privileges
                     const userData = await validateAdminUser(user.email);
                     
                     if (userData) {
                         // User is a valid user
                         setAccount(userData);
                         setAuthenticated(true);
+                        setEmailVerified(true);
                     } else {
                         // User exists but is not a valid user
                         warningToast("Authenticated user is not a valid " + role);
                         setAccount(null);
+                        setAuthenticated(false);
+                        setEmailVerified(false);
                         router.push("/");
                     }
                 } else {
                     // User is not authenticated
                     setAccount(null);
+                    setAuthenticated(false);
+                    setEmailVerified(false);
                     router.push("/");
                 }
             } catch (error) {
@@ -123,9 +139,21 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children, role , collectionName
     if (loading) {
         return <Loading />;
     }
+    console.log('emailVerified', emailVerified);
+    console.log('authenticated', authenticated);
 
-    // Render protected content only if user is authenticated and authorized
-    return authenticated ? <>{children}</> : null;
+    // Show email verification prompt if user is authenticated but email is not verified
+    if (authenticated && !emailVerified) {
+        return <EmailVerificationPrompt userEmail={auth.currentUser?.email || ""} />;
+    }
+
+    // Render protected content only if user is authenticated, authorized, and email is verified
+    if (authenticated && emailVerified) {
+        return <>{children}</>;
+    }
+
+    // User is not authenticated or not authorized
+    return null;
 };
 
 export default RouteGuard;
