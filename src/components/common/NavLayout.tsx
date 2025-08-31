@@ -155,8 +155,8 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
                     <div className="max-w-7xl mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
                         <div className="items-center gap-3 md:mr-0 md:ml-auto  flex flex-row-reverse md:flex-row">
                             <div className="text-left md:text-right leading-tight">
-                                <div className="text-sm sm:text-base font-extrabold">
-                                    {account?.role ? account.role.charAt(0).toUpperCase() + account.role.slice(1) : ''}
+                                <div className="text-sm sm:text-base font-extrabold uppercase">
+                                    {account?.role}
                                 </div>
                                 <div className="text-[10px] sm:text-xs opacity-90">
                                     {account?.email ?? ""}
