@@ -7,6 +7,7 @@ import { successToast, errorToast } from '@/lib/toast'
 import type { Resident } from '@/interface/user'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FaArrowLeft, FaSave } from 'react-icons/fa'
+import { constructFullName } from '@/lib/objects'
 
 const EditResident = () => {
   const router = useRouter()
@@ -69,7 +70,7 @@ const EditResident = () => {
         // Set form data
         setFormData({
           idNo: residentData.idNo || '',
-          fullName: residentData.firstName + ' ' + residentData.middleName + ' ' + residentData.lastName + ' ' + residentData?.suffix || '',
+          fullName: constructFullName(residentData.firstName, residentData.middleName, residentData.lastName, residentData.suffix),
           firstName: residentData.firstName || '',
           middleName: residentData.middleName || '',
           lastName: residentData.lastName || '',
@@ -136,10 +137,22 @@ const EditResident = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [name]: value
-    }))
+    }
+    
+    // Update full name when name fields change
+    if (['firstName', 'middleName', 'lastName', 'suffix'].includes(name)) {
+      updatedFormData.fullName = constructFullName(
+        updatedFormData.firstName || '', 
+        updatedFormData.middleName, 
+        updatedFormData.lastName || '', 
+        updatedFormData.suffix
+      )
+    }
+    
+    setFormData(updatedFormData)
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -160,6 +173,7 @@ const EditResident = () => {
     try {
       const updateData = {
         ...formData,
+        fullName: constructFullName(formData.firstName || '', formData.middleName, formData.lastName || '', formData.suffix),
         birthDate: new Date(formData.birthDate)
       }
 

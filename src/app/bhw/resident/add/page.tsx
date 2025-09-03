@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase'
 import { successToast, errorToast } from '@/lib/toast'
 import { Resident } from '@/interface/user'
 import { useRouter } from 'next/navigation'
+import { constructFullName } from '@/lib/objects'
 
 const AddResident = () => {
   const router = useRouter()
@@ -67,10 +68,22 @@ const AddResident = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [name]: value
-    }))
+    }
+    
+    // Update full name when name fields change
+    if (['firstName', 'middleName', 'lastName', 'suffix'].includes(name)) {
+      updatedFormData.fullName = constructFullName(
+        updatedFormData.firstName || '', 
+        updatedFormData.middleName, 
+        updatedFormData.lastName || '', 
+        updatedFormData.suffix
+      )
+    }
+    
+    setFormData(updatedFormData)
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -92,7 +105,7 @@ const AddResident = () => {
       const residentData = {
         ...formData,
         createdAt: serverTimestamp(),
-        fullName: formData.firstName + ' ' + formData.middleName + ' ' + formData.lastName + ' ' + formData?.suffix || '',
+        fullName: constructFullName(formData.firstName || '', formData.middleName, formData.lastName || '', formData.suffix),
         birthDate: new Date(formData.birthDate as string)
       }
 
