@@ -63,7 +63,10 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children, role , collectionName
 
             if (!querySnapshot.empty) {
                 const userDoc = querySnapshot.docs[0];
-                const userData = userDoc.data() as Account;
+                const userData = {
+                    ...userDoc.data(),
+                    id: userDoc.id
+                } as Account;
                 if (userData.role !== role) {
                     return null;
                 }

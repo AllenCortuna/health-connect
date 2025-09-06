@@ -185,13 +185,18 @@ const LoginPage: React.FC = () => {
                 throw new Error("Account not found");
             }
 
-            const accountData = querySnapshot.docs[0].data() as Account;
+            const doc = querySnapshot.docs[0];
+            const accountData = {
+                ...doc.data(),
+                id: doc.id
+            } as Account;
+
             if (!accountData.email) {
                 throw new Error("Account not found");
             }
 
 
-
+            console.log("accountData", accountData);
             setAccount(accountData);
             if (accountData.role === "admin") {
                 router.push("/admin/dashboard");
