@@ -7,11 +7,14 @@ import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
 import { FaPlus } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
+import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
 
 const Medicine = () => {
   const router = useRouter()
   const [medicines, setMedicines] = useState<Medicine[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -57,7 +60,13 @@ const Medicine = () => {
   }
 
   const openModal = (medicine: Medicine) => {
-    console.log(medicine)
+    setSelectedMedicine(medicine)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setSelectedMedicine(null)
   }
 
   // Filter and search medicines
@@ -255,6 +264,13 @@ const Medicine = () => {
           )}
         </div>
       </div>
+
+      {/* View Medicine Modal */}
+      <ViewMedicineModal
+        medicine={selectedMedicine}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   )
 }
