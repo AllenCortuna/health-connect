@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { collection, getDocs, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, addDoc } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase'
 import { useAccountStore } from '@/store/accountStore'
@@ -169,8 +169,8 @@ const CreateMessage = () => {
       // Create message object
       const messageData: Omit<Message, 'id'> = {
         message: message.trim(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         senderName: account.name || account.email,
         receiverName: selectedRecipient.fullName,
         status: 'unread',
@@ -202,7 +202,7 @@ const CreateMessage = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 pb-20 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-1 mb-6">
         <button
@@ -369,6 +369,7 @@ const CreateMessage = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {attachmentPreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={attachmentPreview}
                           alt="Preview"

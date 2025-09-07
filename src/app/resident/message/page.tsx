@@ -24,6 +24,7 @@ const Messages = () => {
 
   useEffect(() => {
     fetchMessages()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchMessages = async () => {
@@ -43,7 +44,10 @@ const Messages = () => {
           updatedAt: data.updatedAt?.toDate?.() || data.updatedAt
         } as Message
         
-        messagesData.push(message)
+        // Only include messages where current resident is sender or receiver
+        if (message.senderId === account?.id || message.receiverId === account?.id) {
+          messagesData.push(message)
+        }
       })
       
       setMessages(messagesData)
