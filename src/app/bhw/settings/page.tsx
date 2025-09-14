@@ -9,6 +9,7 @@ import { successToast, errorToast } from '@/lib/toast'
 import { HiLockClosed, HiUser, HiEye, HiEyeOff } from 'react-icons/hi'
 import { HiCog6Tooth } from 'react-icons/hi2'
 import type { BHW } from '@/interface/user'
+import { ToastContainer } from 'react-toastify'
 
 const BHWSettings = () => {
   const { account, setAccount } = useAccountStore()
@@ -152,7 +153,7 @@ const BHWSettings = () => {
       const accountRef = doc(db, 'accounts', account.id)
       await updateDoc(accountRef, {
         ...profileData,
-        birthDate: new Date(profileData.birthDate),
+        birthDate: profileData.birthDate,
         updatedAt: new Date()
       })
       
@@ -160,7 +161,7 @@ const BHWSettings = () => {
       const updatedAccount = {
         ...account,
         ...profileData,
-        birthDate: new Date(profileData.birthDate)
+        birthDate: profileData.birthDate
       }
       setAccount(updatedAccount)
       
@@ -246,6 +247,7 @@ const BHWSettings = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
+      <ToastContainer />
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-secondary flex items-center gap-2">
           <HiCog6Tooth />

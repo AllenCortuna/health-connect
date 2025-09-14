@@ -25,3 +25,17 @@ export interface Message {
     senderId: string;
     receiverId: string;
 }
+
+
+export interface Announcement{
+    id: string;
+    createdBy: string; //BHW name
+    createdById: string; //BHW id
+    title: string;
+    content: string;
+    date: string;
+    time: string;
+    createdAt: string;
+    updatedAt: string;
+    important: boolean;
+}

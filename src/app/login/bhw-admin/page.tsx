@@ -366,7 +366,7 @@ const LoginPage: React.FC = () => {
                                 <div className="relative group">
                                     <input
                                         type="text"
-                                        placeholder="Enter your username"
+                                        placeholder="Enter email"
                                         className="input input-bordered w-full pl-12 focus:input-primary transition-all duration-300 bg-base-100 text-xs font-semibold text-primary"
                                         value={formData.username}
                                         onChange={handleInputChange("username")}
@@ -389,7 +389,7 @@ const LoginPage: React.FC = () => {
                                         type={
                                             showPassword ? "text" : "password"
                                         }
-                                        placeholder="Enter your password"
+                                        placeholder="Enter password"
                                         className="input input-bordered w-full pl-12 pr-12 focus:input-primary transition-all duration-300 bg-base-100 font-semibold text-xs text-primary"
                                         value={formData.password}
                                         onChange={handleInputChange("password")}
