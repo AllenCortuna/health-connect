@@ -264,10 +264,10 @@ const Medicine = () => {
                         </div>
                       </td>
                       <td>
-                        <div className="font-medium">
+                        <div className="font-semibold text-zinc-600">
                           {medicine.name}
                         </div>
-                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                        <div className="text-[10px] text-gray-500 truncate max-w-xs">
                           {medicine.description}
                         </div>
                       </td>

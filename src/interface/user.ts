@@ -5,6 +5,10 @@ export interface Account {
     createdAt?: Date | { toDate: () => Date };
     role: 'admin' | 'bhw' | 'resident';
     name?: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    suffix?: string;
     contactNumber?: string;
     address?: string;
 }

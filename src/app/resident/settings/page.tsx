@@ -15,60 +15,60 @@ const Settings = () => {
 
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
-          <h2 className="card-title text-lg mb-4">Account Information</h2>
+          <h2 className="card-title text-lg mb-4 text-secondary font-bold">Account Information</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold">Name</span>
               </label>
               <input
                 type="text"
-                value={account?.name || ''}
-                className="input input-bordered"
+                value={`${account?.firstName || ''} ${account?.middleName?.charAt(0) || ''}. ${account?.lastName || ''} ${account?.suffix || ''}`}
+                className="input input-bordered text-xs"
                 disabled
               />
             </div>
             
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold">Email</span>
               </label>
               <input
                 type="email"
                 value={account?.email || ''}
-                className="input input-bordered"
+                className="input input-bordered text-xs"
                 disabled
               />
             </div>
             
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold">Contact Number</span>
               </label>
               <input
                 type="tel"
                 value={account?.contactNumber || ''}
-                className="input input-bordered"
+                className="input input-bordered text-xs"
                 disabled
               />
             </div>
             
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold">Address</span>
               </label>
               <input
                 type="text"
                 value={account?.address || ''}
-                className="input input-bordered"
+                className="input input-bordered text-xs"
                 disabled
               />
             </div>
           </div>
           
-          <div className="mt-6">
-            <p className="text-sm text-gray-500">
+          <div className="mt-10 ">
+            <p className="text-xs text-gray-500">
               To update your information, please contact your local health worker or administrator.
             </p>
           </div>

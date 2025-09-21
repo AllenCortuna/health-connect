@@ -10,30 +10,30 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
     switch (status) {
       // Resident statuses
       case 'child':
-        return 'badge badge-primary whitespace-nowrap'
+        return 'badge badge-primary whitespace-nowrap text-[10px]'
       case 'adult':
-        return 'badge badge-success whitespace-nowrap'
+        return 'badge badge-success whitespace-nowrap text-[10px]'
       case 'senior':
-        return 'badge badge-warning whitespace-nowrap'
+        return 'badge badge-warning whitespace-nowrap text-[10px]'
       case 'pwd':
-        return 'badge badge-error whitespace-nowrap'
+        return 'badge badge-error whitespace-nowrap text-[10px]'
       case 'pregnant':
-        return 'badge badge-info whitespace-nowrap'
+        return 'badge badge-info whitespace-nowrap text-[10px]'
       
       // BHW statuses
       case 'single':
-        return 'badge badge-primary whitespace-nowrap'
+        return 'badge badge-primary whitespace-nowrap text-[10px]'
       case 'married':
-        return 'badge badge-success whitespace-nowrap'
+        return 'badge badge-success whitespace-nowrap text-[10px]'
       case 'widowed':
-        return 'badge badge-warning whitespace-nowrap'
+        return 'badge badge-warning whitespace-nowrap text-[10px]'
       case 'separated':
-        return 'badge badge-error whitespace-nowrap'
+        return 'badge badge-error whitespace-nowrap text-[10px]'
       case 'divorced':
-        return 'badge badge-info whitespace-nowrap'
+        return 'badge badge-info whitespace-nowrap text-[10px]'
       
       default:
-        return 'badge badge-ghost whitespace-nowrap'
+        return 'badge badge-neutral whitespace-nowrap text-[10px]'
     }
   }
 

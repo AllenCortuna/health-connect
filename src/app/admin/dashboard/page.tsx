@@ -1,9 +1,151 @@
-import React from 'react'
+"use client"
 
-const page = () => {
+import React, { useMemo } from 'react'
+import { useAdminDashboard } from '@/hooks/useAdminDashboard'
+import StatusBadge from '@/components/common/StatusBadge'
+
+function StatCard({ label, value, color }: { label: string; value: number | string; color: 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'error' }) {
   return (
-    <div>page</div>
+      <div className={`p-4 rounded-xl shadow w-60`}> 
+        <div className={`stat-title text-xs font-semibold`}>{label}</div>
+        <div className={`stat-value text-xl font-extrabold text-${color}`}>{value}</div>
+      </div>
   )
 }
 
-export default page
+function MonthCalendar({ date }: { date: Date }) {
+  const { monthLabel, weeks } = useMemo(() => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const monthLabelLocal = date.toLocaleString(undefined, { month: 'long', year: 'numeric' })
+    const days: (number | null)[] = []
+    const startWeekday = firstDay.getDay() // 0-6
+    for (let i = 0; i < startWeekday; i++) days.push(null)
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(d)
+    while (days.length % 7 !== 0) days.push(null)
+    const weeksLocal: (number | null)[][] = []
+    for (let i = 0; i < days.length; i += 7) weeksLocal.push(days.slice(i, i + 7))
+    return { monthLabel: monthLabelLocal, weeks: weeksLocal }
+  }, [date])
+
+  return (
+    <div className="card bg-base-100 shadow-lg">
+      <div className="card-body">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-lg text-secondary font-bold">{monthLabel}</div>
+        </div>
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold opacity-70 mb-2">
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+            <div key={d}>{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {weeks.flat().map((d, idx) => (
+            <div key={idx} className={`h-10 flex items-center justify-center rounded-md ${d ? 'bg-base-200' : 'opacity-30'}`}>
+              {d ?? ''}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function AdminDashboardPage() {
+  const stats = useAdminDashboard()
+
+  if (stats.isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-center items-center h-64">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      {/* Top stats */}
+      <div className="flex flex-wrap flex-row gap-4 mb-6">
+        <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
+        <StatCard label="Normal Residents" value={stats.normalResidents} color="success" />
+        <StatCard label="Pregnants" value={stats.pregnantResidents} color="accent" />
+        <StatCard label="PWD's" value={stats.pwdResidents} color="info" />
+        <StatCard label="Seniors" value={stats.seniorResidents} color="error" />
+        <StatCard label="Childs" value={stats.childResidents} color="success" />
+      </div>
+
+      {/* Quick status + Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="card bg-base-100 shadow-lg">
+          <div className="card-body">
+            <div className="text-lg text-secondary font-bold mb-4">Quick Status</div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="font-bold text-xs text-zinc-500">Patients Served</div>
+                <div className="ml-auto text-xl font-bold text-secondary">{stats.patientsServed}</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="font-bold text-xs text-zinc-500">Upcoming Events</div>
+                <div className="ml-auto text-xl font-bold text-secondary">{stats.upcomingEvents}</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="font-bold text-xs text-zinc-500">Reports Submitted</div>
+                <div className="ml-auto text-xl font-bold text-secondary">{stats.reportsSubmitted}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          <MonthCalendar date={new Date()} />
+        </div>
+      </div>
+
+      {/* Residents list */}
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body">
+          <div className="text-lg text-secondary font-bold mb-4">List of Residents</div>
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Age</th>
+                  <th>Name</th>
+                  <th>H/W</th>
+                  <th>Gender</th>
+                  <th>Date/Birth</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.recentResidents.map((r) => {
+                  const birth = r.birthDate instanceof Date ? r.birthDate : undefined
+                  const age = birth ? Math.max(0, new Date(Date.now() - birth.getTime()).getUTCFullYear() - 1970) : ''
+                  return (
+                    <tr key={r.id} className="text-xs font-medium text-zinc-500">
+                      <td>{age}</td>
+                      <td>{r.fullName ?? ''}</td>
+                      <td>{r.height && r.weight ? `${r.height}'/${r.weight}` : '—'}</td>
+                      <td className="capitalize">{r.gender}</td>
+                      <td>{birth ? birth.toLocaleDateString() : ''}</td>
+                      <td><StatusBadge status={r.status} size="xs" /></td>
+                    </tr>
+                  )
+                })}
+                {stats.recentResidents.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center text-sm text-gray-500 py-6">No residents found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
