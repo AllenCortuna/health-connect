@@ -16,7 +16,7 @@ const EditBHW = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [bhw, setBhw] = useState<BHW | null>(null)
-  const [formData, setFormData] = useState<Omit<Partial<BHW>, 'createdAt' | 'birthDate'> & { birthDate: string }>({
+  const [formData, setFormData] = useState<Omit<Partial<BHW>, 'birthDate'> & { birthDate: string }>({
     name: '',
     email: '',
     contactNumber: '',
@@ -52,9 +52,10 @@ const EditBHW = () => {
           return
         }
         
-        const bhwData: BHW = {
+        const bhwData = {
           id: bhwSnap.id,
           ...data,
+          birthDate: data.birthDate?.toDate?.() || data.birthDate,
           createdAt: data.createdAt?.toDate?.() || data.createdAt
         } as BHW
         
@@ -66,7 +67,13 @@ const EditBHW = () => {
           email: bhwData.email || '',
           contactNumber: bhwData.contactNumber || '',
           address: bhwData.address || '',
-          birthDate: bhwData.birthDate,
+          birthDate: (() => {
+            const birthDate = bhwData.birthDate;
+            if (birthDate && typeof birthDate === 'object' && 'toISOString' in birthDate) {
+              return (birthDate as Date).toISOString().split('T')[0];
+            }
+            return birthDate || '';
+          })(),
           gender: bhwData.gender || 'male',
           status: bhwData.status || 'single'
         })
@@ -89,6 +96,8 @@ const EditBHW = () => {
     if (!formData.name?.trim()) newErrors.name = 'Name is required'
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.email?.trim()) newErrors.email = 'Email is required'
+    if (!formData.birthDate?.trim()) newErrors.birthDate = 'Birth date is required'
+    
     // Contact number validation (optional but if provided, should be valid)
     if (formData.contactNumber && !/^(\+63|0)?[0-9]{10,11}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
       newErrors.contactNumber = 'Please enter a valid contact number'
@@ -99,6 +108,21 @@ const EditBHW = () => {
       newErrors.email = 'Please enter a valid email address'
     }
 
+    // Birth date validation
+    if (formData.birthDate) {
+      const birthDate = new Date(formData.birthDate)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      
+      if (birthDate > today) {
+        newErrors.birthDate = 'Birth date cannot be in the future'
+      } else if (age < 18) {
+        newErrors.birthDate = 'BHW must be at least 18 years old'
+      } else if (age > 100) {
+        newErrors.birthDate = 'Please enter a valid birth date'
+      }
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -107,7 +131,7 @@ const EditBHW = () => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'birthDate' ? value : value
+      [name]: value
     }))
     
     // Clear error when user starts typing
@@ -127,12 +151,21 @@ const EditBHW = () => {
     setIsSaving(true)
     
     try {
-      const bhwRef = doc(db, 'accounts', bhwId!)
-      await updateDoc(bhwRef, {
+      const updateData = {
         ...formData,
-        birthDate: formData.birthDate ? new Date(formData.birthDate) : undefined,
+        birthDate: new Date(formData.birthDate),
         updatedAt: new Date()
+      }
+
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key as keyof typeof updateData] === undefined) {
+          delete updateData[key as keyof typeof updateData]
+        }
       })
+
+      const bhwRef = doc(db, 'accounts', bhwId!)
+      await updateDoc(bhwRef, updateData)
       
       successToast('BHW updated successfully!')
       router.push('/admin/bhw')
