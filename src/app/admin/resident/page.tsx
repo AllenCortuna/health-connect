@@ -62,7 +62,7 @@ const Resident = () => {
   const filteredResidents = residents.filter((resident) => {
     const matchesSearch = searchTerm === '' || 
       resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.idNo.toLowerCase().includes(searchTerm.toLowerCase())
+      resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || resident.status === statusFilter
     
@@ -175,7 +175,7 @@ const Resident = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>ID Number</th>
+                    <th>Family Number</th>
                     <th>Status</th>
                     <th>Gender</th>
                     <th>Actions</th>
@@ -190,7 +190,7 @@ const Resident = () => {
                         </div>
                       </td>
                       <td>
-                          {resident.idNo}
+                          {resident.familyNo}
                       </td>
                       <td>
                         <StatusBadge status={resident.status} size="xs" />

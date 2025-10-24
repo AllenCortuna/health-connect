@@ -12,7 +12,7 @@ const AddResident = () => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<Omit<Partial<Resident>, 'birthDate'> & { birthDate: string }>({
-    idNo: '',
+    familyNo: '',
     fullName: '',
     firstName: '',
     middleName: '',
@@ -37,7 +37,7 @@ const AddResident = () => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.idNo?.trim()) newErrors.idNo = 'ID Number is required'
+    if (!formData.familyNo?.trim()) newErrors.familyNo = 'Family Number is required'
     if (!formData.firstName?.trim()) newErrors.firstName = 'First Name is required'
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last Name is required'
     if (!formData.birthPlace?.trim()) newErrors.birthPlace = 'Birth Place is required'
@@ -131,17 +131,17 @@ const AddResident = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold text-xs">ID Number *</span>
+                  <span className="label-text font-semibold text-xs">Family Number *</span>
                 </label>
                 <input
                   type="text"
-                  name="idNo"
-                  value={formData.idNo}
+                  name="familyNo"
+                  value={formData.familyNo}
                   onChange={handleInputChange}
-                  className={`input input-bordered ${errors.idNo ? 'input-error' : ''}`}
-                  placeholder="Enter ID Number"
+                  className={`input input-bordered ${errors.familyNo ? 'input-error' : ''}`}
+                  placeholder="Enter Family Number"
                 />
-                {errors.idNo && <span className="label-text-alt text-error">{errors.idNo}</span>}
+                {errors.familyNo && <span className="label-text-alt text-error">{errors.familyNo}</span>}
               </div>
 
               <div className="form-control">

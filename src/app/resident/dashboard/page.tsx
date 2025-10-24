@@ -65,7 +65,7 @@ const Dashboard = () => {
         </p>
         {residentData && (
           <div className="mt-2 text-sm text-gray-500">
-            ID: {residentData.idNo} • {residentData.status.charAt(0).toUpperCase() + residentData.status.slice(1)}
+            Family Number: {residentData.familyNo} • {residentData.status.charAt(0).toUpperCase() + residentData.status.slice(1)}
           </div>
         )}
       </div>

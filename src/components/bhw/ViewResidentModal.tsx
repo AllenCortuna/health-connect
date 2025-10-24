@@ -96,8 +96,8 @@ const ResidentPDF = ({ resident }: { resident: Resident }) => {
           <Text style={styles.sectionTitle}>Basic Information</Text>
           <View style={styles.row}>
             <View style={styles.column}>
-              <Text style={styles.label}>ID Number</Text>
-              <Text style={styles.value}>{resident.idNo}</Text>
+              <Text style={styles.label}>Family Number</Text>
+              <Text style={styles.value}>{resident.familyNo}</Text>
             </View>
             <View style={styles.column}>
               <Text style={styles.label}>House Number</Text>
@@ -287,9 +287,9 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="label">
-                    <span className="label-text text-xs font-semibold">ID Number</span>
+                    <span className="label-text text-xs font-semibold">Family Number</span>
                   </label>
-                  <p className="text-sm">{resident.idNo}</p>
+                  <p className="text-sm">{resident.familyNo}</p>
                 </div>
                 <div>
                   <label className="label">

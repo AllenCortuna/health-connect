@@ -173,7 +173,7 @@ const LoginPage: React.FC = () => {
                 formData.password
             );
 
-            const accountsRef = collection(db, "resident");
+            const accountsRef = collection(db, "households");
             const q = query(
                 accountsRef,
                 where("email", "==", formData.username),

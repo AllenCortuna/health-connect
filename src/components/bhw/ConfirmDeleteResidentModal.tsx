@@ -23,10 +23,10 @@ const ConfirmDeleteResidentModal: React.FC<ConfirmDeleteResidentModalProps> = ({
   if (!isOpen || !resident) return null
 
   const handleConfirm = () => {
-    if (confirmationId.trim() === resident.idNo) {
+    if (confirmationId.trim() === resident.familyNo) {
       onConfirm()
     } else {
-      setError('ID Number does not match. Please try again.')
+      setError('Family Number does not match. Please try again.')
     }
   }
 
@@ -60,7 +60,7 @@ const ConfirmDeleteResidentModal: React.FC<ConfirmDeleteResidentModalProps> = ({
               <p className="font-semibold text-sm">
                 {resident.firstName} {resident.middleName} {resident.lastName} {resident.suffix}
               </p>
-              <p className="text-xs text-gray-600">ID: {resident.idNo}</p>
+              <p className="text-xs text-gray-600">Family Number: {resident.familyNo}</p>
             </div>
           </div>
 
@@ -74,7 +74,7 @@ const ConfirmDeleteResidentModal: React.FC<ConfirmDeleteResidentModalProps> = ({
           <div className="form-control">
             <label className="label">
               <span className="label-text font-semibold text-xs mb-4">
-                Type the resident&apos;s ID Number to confirm: <span className="text-error">*</span>
+                Type the resident&apos;s Family Number to confirm: <span className="text-error">*</span>
               </span>
             </label>
             <input
@@ -82,7 +82,7 @@ const ConfirmDeleteResidentModal: React.FC<ConfirmDeleteResidentModalProps> = ({
               value={confirmationId}
               onChange={handleInputChange}
               className={`input input-bordered ${error ? 'input-error' : ''}`}
-              placeholder={`Enter: ${resident.idNo}`}
+              placeholder={`Enter: ${resident.familyNo}`}
               disabled={isDeleting}
             />
             {error && (
@@ -102,7 +102,7 @@ const ConfirmDeleteResidentModal: React.FC<ConfirmDeleteResidentModalProps> = ({
           <button
             onClick={handleConfirm}
             className="btn btn-error"
-            disabled={isDeleting || confirmationId.trim() !== resident.idNo}
+            disabled={isDeleting || confirmationId.trim() !== resident.familyNo}
           >
             {isDeleting ? (
               <>

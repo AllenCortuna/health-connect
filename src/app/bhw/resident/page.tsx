@@ -1,16 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, doc, deleteDoc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Resident } from '@/interface/user'
 import { useRouter } from 'next/navigation'
-import { FaPlus, FaTrash } from 'react-icons/fa'
+import { FaPlus } from 'react-icons/fa'
 import ViewResidentModal from '@/components/bhw/ViewResidentModal'
-import ConfirmDeleteResidentModal from '@/components/bhw/ConfirmDeleteResidentModal'
 import StatusBadge from '@/components/common/StatusBadge'
 import Link from 'next/link'
-import { successToast, errorToast } from '@/lib/toast'
 
 const Resident = () => {
   const router = useRouter()
@@ -18,9 +16,6 @@ const Resident = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [residentToDelete, setResidentToDelete] = useState<Resident | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
@@ -64,40 +59,12 @@ const Resident = () => {
     setSelectedResident(null)
   }
 
-  const openDeleteModal = (resident: Resident) => {
-    setResidentToDelete(resident)
-    setIsDeleteModalOpen(true)
-  }
-
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false)
-    setResidentToDelete(null)
-  }
-
-  const handleDeleteResident = async () => {
-    if (!residentToDelete) return
-
-    setIsDeleting(true)
-    try {
-      const residentRef = doc(db, 'resident', residentToDelete.id)
-      await deleteDoc(residentRef)
-      
-      successToast('Resident deleted successfully!')
-      closeDeleteModal()
-      fetchResidents() // Refresh the list
-    } catch (error) {
-      console.error('Error deleting resident:', error)
-      errorToast('Failed to delete resident. Please try again.')
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   // Filter and search residents
   const filteredResidents = residents.filter((resident) => {
     const matchesSearch = searchTerm === '' || 
       resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.idNo.toLowerCase().includes(searchTerm.toLowerCase())
+      resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || resident.status === statusFilter
     
@@ -140,7 +107,7 @@ const Resident = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by name or ID number..."
+                placeholder="Search by name or family number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"
@@ -217,7 +184,7 @@ const Resident = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>ID Number</th>
+                    <th>Household Number</th>
                     <th>Status</th>
                     <th>Gender</th>
                     <th>Actions</th>
@@ -232,7 +199,7 @@ const Resident = () => {
                         </div>
                       </td>
                       <td>
-                          {resident.idNo}
+                          {resident.householdId}
                       </td>
                       <td>
                         <StatusBadge status={resident.status} size="xs" />
@@ -257,13 +224,6 @@ const Resident = () => {
                         >
                           Edit
                         </Link>
-                        <button
-                          onClick={() => openDeleteModal(resident)}
-                          className="btn btn-outline btn-error btn-xs"
-                          title="Delete Resident"
-                        >
-                          <FaTrash />
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -281,14 +241,6 @@ const Resident = () => {
         onClose={closeModal}
       />
 
-      {/* Delete Resident Modal */}
-      <ConfirmDeleteResidentModal
-        resident={residentToDelete}
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleDeleteResident}
-        isDeleting={isDeleting}
-      />
     </div>
   )
 }

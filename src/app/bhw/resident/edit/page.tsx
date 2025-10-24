@@ -18,7 +18,6 @@ const EditResident = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [resident, setResident] = useState<Resident | null>(null)
   const [formData, setFormData] = useState<Omit<Partial<Resident>, 'birthDate'> & { birthDate: string }>({
-    idNo: '',
     fullName: '',
     firstName: '',
     middleName: '',
@@ -69,7 +68,6 @@ const EditResident = () => {
         
         // Set form data
         setFormData({
-          idNo: residentData.idNo || '',
           fullName: constructFullName(residentData.firstName, residentData.middleName, residentData.lastName, residentData.suffix),
           firstName: residentData.firstName || '',
           middleName: residentData.middleName || '',
@@ -106,7 +104,7 @@ const EditResident = () => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.idNo?.trim()) newErrors.idNo = 'ID Number is required'
+    if (!formData.familyNo?.trim()) newErrors.familyNo = 'Family Number is required'
     if (!formData.firstName?.trim()) newErrors.firstName = 'First Name is required'
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last Name is required'
     if (!formData.birthPlace?.trim()) newErrors.birthPlace = 'Birth Place is required'
@@ -239,38 +237,6 @@ const EditResident = () => {
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">ID Number *</span>
-                </label>
-                <input
-                  type="text"
-                  name="idNo"
-                  value={formData.idNo}
-                  onChange={handleInputChange}
-                  className={`input input-bordered ${errors.idNo ? 'input-error' : ''}`}
-                  placeholder="Enter ID Number"
-                />
-                {errors.idNo && <span className="label-text-alt text-error">{errors.idNo}</span>}
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">House Number</span>
-                </label>
-                <input
-                  type="text"
-                  name="houseNo"
-                  value={formData.houseNo}
-                  onChange={handleInputChange}
-                  className="input input-bordered"
-                  placeholder="Enter House Number"
-                />
-              </div>
-            </div>
-
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">

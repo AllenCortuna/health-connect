@@ -13,9 +13,22 @@ export interface Account {
     address?: string;
 }
 
+export interface Household {
+    id: string;
+    householdNumber: string;
+    address: string;
+    createdAt?: string;
+    totalMembers: number;
+    totalFamily: number;
+    headOfHousehold: string;
+    email: string;
+    headOfHouseholdContactNumber: string;
+}
+
 export interface Resident {
     id: string;
-    idNo: string;
+    householdId: string;
+    familyNo: string;
     fullName: string;
     firstName: string;
     middleName: string;

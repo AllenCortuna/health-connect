@@ -4,6 +4,7 @@ import NavLayout from '@/components/common/NavLayout'
 import { HiHome, HiUserGroup, HiBeaker, HiBell, HiPrinter } from 'react-icons/hi';
 import { HiChatBubbleLeftRight } from 'react-icons/hi2';
 import { IoMdSettings } from 'react-icons/io';
+import { HiBuildingOffice } from 'react-icons/hi2';
 import { NavigationItemProps } from '@/components/common/NavigationItem'
 import RouteGuard from '@/components/common/RouteGuard';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
@@ -13,7 +14,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   
   const primaryNavItems: NavigationItemProps[] = [
     { href: "/bhw/dashboard", icon: HiHome, label: "Dashboard"},
-    { href: "/bhw/resident", icon: HiUserGroup, label: "Update Resident"},
+    { href: "/bhw/household", icon: HiBuildingOffice, label: "Households"},
+    { href: "/bhw/resident", icon: HiUserGroup, label: "Residents"},
     { href: "/bhw/medicine", icon: HiBeaker, label: "Track Medicines"},
     { 
       href: "/bhw/message", 
