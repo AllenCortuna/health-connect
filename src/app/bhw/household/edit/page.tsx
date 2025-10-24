@@ -172,7 +172,7 @@ const EditHousehold = () => {
                 {errors.totalFamily && <span className="label-text-alt text-error">{errors.totalFamily}</span>}
               </div>
 
-              <div className="form-control">
+              <div className="form-control flex flex-col">
                 <label className="label">
                   <span className="label-text font-semibold text-xs">Email *</span>
                 </label>
@@ -184,6 +184,7 @@ const EditHousehold = () => {
                   className={`input input-bordered ${errors.email ? 'input-error' : ''}`}
                   placeholder="Enter Email Address"
                 />
+                <span className="label-text-alt text-xs text-warning drop-shadow w-80">Email required for household account creation</span>
                 {errors.email && <span className="label-text-alt text-error">{errors.email}</span>}
               </div>
 

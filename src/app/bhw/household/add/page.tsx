@@ -115,6 +115,7 @@ const AddHousehold = () => {
                   className={`input input-bordered ${errors.email ? 'input-error' : ''}`}
                   placeholder="Enter Email Address"
                 />
+                <span className="label-text-alt text-[10px] text-warning drop-shadow w-80">Email required for household account creation</span>
                 {errors.email && <span className="label-text-alt text-error">{errors.email}</span>}
               </div>
 
