@@ -129,6 +129,9 @@ const ResidentSignup: React.FC = () => {
                                     required
                                     disabled={loading}
                                 />
+                                    <span className="label-text-alt text-xs text-error my-3 text-[9px] font-semibold">
+                                        Use the email you gave to the BHW
+                                    </span>
                             </div>
                         </div>
 
