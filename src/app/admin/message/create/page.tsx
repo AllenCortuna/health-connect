@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import { HiArrowLeft, HiPaperClip, HiX } from 'react-icons/hi'
 import { HiMagnifyingGlass } from 'react-icons/hi2'
 import type { Message } from '@/interface/data'
-import type { Resident, Account } from '@/interface/user'
+import type { Account, Household } from '@/interface/user'
 
 interface SearchResult {
   id: string
@@ -50,18 +50,18 @@ const CreateMessage = () => {
 
       if (messageType === 'resident') {
         // Search residents
-        const residentsRef = collection(db, 'resident')
-        const residentsQuery = query(residentsRef, orderBy('fullName'))
+        const residentsRef = collection(db, 'household')
+        const residentsQuery = query(residentsRef, orderBy('headOfHousehold'))
         const residentsSnapshot = await getDocs(residentsQuery)
         
         residentsSnapshot.forEach((doc) => {
-          const data = doc.data() as Resident
-          if (data.fullName.toLowerCase().includes(searchQuery.toLowerCase())) {
+          const data = doc.data() as Household
+          if (data.headOfHousehold.toLowerCase().includes(searchQuery.toLowerCase())) {
             results.push({
               id: doc.id,
-              fullName: data.fullName,
+              fullName: data.headOfHousehold,
               type: 'resident',
-              contactNumber: data.contactNumber,
+              contactNumber: data.headOfHouseholdContactNumber,
               email: data.email
             })
           }

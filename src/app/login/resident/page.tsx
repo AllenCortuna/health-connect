@@ -27,7 +27,7 @@ import Link from "next/link";
  * Form data structure for admin login
  */
 interface FormData {
-    username: string;
+    email: string;
     password: string;
 }
 
@@ -62,7 +62,7 @@ const LoginPage: React.FC = () => {
 
     /** Form input data */
     const [formData, setFormData] = useState<FormData>({
-        username: "",
+        email: "",
         password: "",
     });
 
@@ -144,8 +144,8 @@ const LoginPage: React.FC = () => {
         // ====================================================================
 
         // Check for empty fields
-        if (!formData.username || !formData.password) {
-            setError("Please enter both username and password");
+        if (!formData.email || !formData.password) {
+            setError("Please enter both email and password");
             return;
         }
 
@@ -169,23 +169,25 @@ const LoginPage: React.FC = () => {
         try {
             await signInWithEmailAndPassword(
                 auth,
-                formData.username,
+                formData.email,
                 formData.password
             );
-
-            const accountsRef = collection(db, "households");
+            const householdsRef = collection(db, "household");
             const q = query(
-                accountsRef,
-                where("email", "==", formData.username),
+                householdsRef,
+                where("email", "==", formData.email.trim()),
                 limit(1)
             );
-            const querySnapshot = await getDocs(q);
 
+            const querySnapshot = await getDocs(q);
             if (querySnapshot.empty) {
                 throw new Error("Account not found");
             }
 
+
+            console.log("querySnapshot ====>", querySnapshot.docs[0].data());
             const doc = querySnapshot.docs[0];
+            console.log("doc ====>", doc.data());
             const accountData = {
                 ...doc.data(),
                 id: doc.id
@@ -198,7 +200,7 @@ const LoginPage: React.FC = () => {
 
             console.log("accountData", accountData);
             setAccount(accountData);
-            if (accountData.role === "resident") {
+            if (accountData.role === "household") {
                 router.push("/resident/dashboard");
             }
         } catch (err) {
@@ -231,7 +233,7 @@ const LoginPage: React.FC = () => {
                                 break;
                             case "auth/user-not-found":
                                 errorMessage =
-                                    "Username not found. Please check your username and try again.";
+                                    "Email not found. Please check your email and try again.";
                                 break;
                             case "auth/invalid-email":
                                 errorMessage =
@@ -256,7 +258,7 @@ const LoginPage: React.FC = () => {
                                 break;
                             case "auth/invalid-credential":
                                 errorMessage =
-                                    "Invalid credentials. Please check your username and password.";
+                                    "Invalid credentials. Please check your email and password.";
                                 break;
                             case "auth/account-exists-with-different-credential":
                                 errorMessage =
@@ -354,16 +356,16 @@ const LoginPage: React.FC = () => {
                             <div className="form-control">
                                 <label className="label">
                                     <span className="label-text text-zinc-500 font-medium text-xs mb-2">
-                                        Username
+                                        Email
                                     </span>
                                 </label>
                                 <div className="relative group">
                                     <input
-                                        type="text"
-                                        placeholder="Enter your username"
+                                        type="email"
+                                        placeholder="Enter your email"
                                         className="input input-bordered w-full pl-12 focus:input-primary transition-all duration-300 bg-base-100 text-xs font-semibold text-primary"
-                                        value={formData.username}
-                                        onChange={handleInputChange("username")}
+                                        value={formData.email}
+                                        onChange={handleInputChange("email")}
                                         required
                                         autoComplete="username"
                                         disabled={isLocked}

@@ -204,9 +204,7 @@ const LoginPage: React.FC = () => {
             if (accountData.role === "bhw") {
                 router.push("/bhw/dashboard");
             }
-            if (accountData.role === "resident") {
-                router.push("/resident/dashboard");
-            }
+
         } catch (err) {
             // ================================================================
             // ERROR HANDLING

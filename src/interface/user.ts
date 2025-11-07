@@ -3,7 +3,7 @@ export interface Account {
     email: string;
     password?: string;
     createdAt?: Date | { toDate: () => Date };
-    role: 'admin' | 'bhw' | 'resident';
+    role: 'admin' | 'bhw' | 'household';
     name?: string;
     firstName?: string;
     middleName?: string;

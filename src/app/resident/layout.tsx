@@ -33,7 +33,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className='bg-base-100 h-screen w-screen'>
-      <RouteGuard role="resident" collectionName="resident">
+      <RouteGuard role="household" collectionName="household">
         <NavLayout primaryNavItems={primaryNavItems} secondaryNavItems={[]}>
             {children}
         </NavLayout>  
