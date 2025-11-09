@@ -11,6 +11,7 @@ export interface Account {
     suffix?: string;
     contactNumber?: string;
     address?: string;
+    headOfHousehold?: string;
 }
 
 export interface Household {

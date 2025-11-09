@@ -1,14 +1,30 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase'
 import { useAccountStore } from '@/store/accountStore'
 import { useRouter } from 'next/navigation'
-import { HiPlus, HiPaperClip, HiDownload, HiTrash } from 'react-icons/hi'
+import { HiPlus, HiPaperClip } from 'react-icons/hi'
 import { HiMagnifyingGlass } from 'react-icons/hi2'
 import type { Message } from '@/interface/data'
+import ConversationModal from '@/components/bhw/ConversationModal'
+
+interface Conversation {
+  partnerId: string
+  partnerName: string
+  lastMessage: Message
+  unreadCount: number
+  messages: Message[]
+}
+
+// Helper function to get timestamp from Date or string
+const getTimestamp = (date: Date | string | undefined): number => {
+  if (!date) return 0
+  if (date instanceof Date) return date.getTime()
+  return new Date(date).getTime()
+}
 
 const Messages = () => {
   const router = useRouter()
@@ -17,8 +33,7 @@ const Messages = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState<'inbox' | 'sent'>('inbox')
-  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null)
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -54,28 +69,79 @@ const Messages = () => {
     }
   }
 
-  // Filter messages based on search and tab
-  const filteredMessages = messages.filter((message) => {
-    const matchesSearch = searchTerm === '' || 
-      message.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.receiverName.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    // Filter by inbox/sent based on current user
-    const isSentByCurrentUser = message.senderId === account?.id
-    const matchesTab = activeTab === 'sent' ? isSentByCurrentUser : !isSentByCurrentUser
-    
-    return matchesSearch && matchesTab
-  })
+  // Group messages by conversation partner
+  const conversations = useMemo(() => {
+    if (!account?.id) return []
 
-  // Open message modal and mark as read if it's unread
-  const openMessageModal = async (message: Message) => {
-    setSelectedMessage(message)
+    const conversationMap = new Map<string, Conversation>()
+
+    messages.forEach((message) => {
+      // Determine the conversation partner
+      const isSentByCurrentUser = message.senderId === account.id
+      const partnerId = isSentByCurrentUser ? message.receiverId : message.senderId
+      const partnerName = isSentByCurrentUser ? message.receiverName : message.senderName
+
+      if (!conversationMap.has(partnerId)) {
+        conversationMap.set(partnerId, {
+          partnerId,
+          partnerName,
+          lastMessage: message,
+          unreadCount: 0,
+          messages: []
+        })
+      }
+
+      const conversation = conversationMap.get(partnerId)!
+      conversation.messages.push(message)
+
+      // Update last message if this one is newer
+      if (message.createdAt && conversation.lastMessage.createdAt) {
+        const messageTime = getTimestamp(message.createdAt)
+        const lastMessageTime = getTimestamp(conversation.lastMessage.createdAt)
+        
+        if (messageTime > lastMessageTime) {
+          conversation.lastMessage = message
+        }
+      }
+
+      // Count unread messages (only messages received by current user)
+      if (!isSentByCurrentUser && message.status === 'unread' && message.receiverId === account.id) {
+        conversation.unreadCount++
+      }
+    })
+
+    // Sort conversations by last message time (newest first)
+    return Array.from(conversationMap.values()).sort((a, b) => {
+      const timeA = getTimestamp(a.lastMessage.createdAt)
+      const timeB = getTimestamp(b.lastMessage.createdAt)
+      return timeB - timeA
+    })
+  }, [messages, account?.id])
+
+  // Filter conversations by search term
+  const filteredConversations = useMemo(() => {
+    if (searchTerm === '') return conversations
+    
+    const searchLower = searchTerm.toLowerCase()
+    return conversations.filter(conv => 
+      conv.partnerName.toLowerCase().includes(searchLower) ||
+      conv.lastMessage.message.toLowerCase().includes(searchLower)
+    )
+  }, [conversations, searchTerm])
+
+  // Open conversation modal
+  const openConversationModal = async (conversation: Conversation) => {
+    setSelectedConversation(conversation)
     setIsModalOpen(true)
     
-    // Mark as read if it's unread and in inbox
-    if (activeTab === 'inbox' && message.status === 'unread' && message.receiverId === account?.id) {
-      await markAsRead(message.id)
+    // Mark all unread messages in this conversation as read
+    const unreadMessages = conversation.messages.filter(
+      msg => msg.status === 'unread' && msg.receiverId === account?.id
+    )
+    
+    if (unreadMessages.length > 0) {
+      const updatePromises = unreadMessages.map(msg => markAsRead(msg.id))
+      await Promise.all(updatePromises)
     }
   }
 
@@ -98,37 +164,12 @@ const Messages = () => {
     }
   }
 
-  // Mark all unread messages as read
-  const markAllAsRead = async () => {
-    const unreadMessages = messages.filter(msg => 
-      msg.status === 'unread' && 
-      msg.receiverId === account?.id
-    )
-    
-    try {
-      const updatePromises = unreadMessages.map(msg => 
-        updateDoc(doc(db, 'messages', msg.id), { status: 'read' })
-      )
-      
-      await Promise.all(updatePromises)
-      
-      // Update local state
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.status === 'unread' && msg.receiverId === account?.id 
-            ? { ...msg, status: 'read' as const } 
-            : msg
-        )
-      )
-    } catch (error) {
-      console.error('Error marking all messages as read:', error)
-    }
-  }
-
-  // Close message modal
-  const closeMessageModal = () => {
-    setSelectedMessage(null)
+  // Close conversation modal
+  const closeConversationModal = () => {
+    setSelectedConversation(null)
     setIsModalOpen(false)
+    // Refresh messages to update unread counts
+    fetchMessages()
   }
 
   // Download attachment
@@ -166,9 +207,27 @@ const Messages = () => {
         prevMessages.filter(msg => msg.id !== messageId)
       )
 
-      // Close modal if the deleted message was selected
-      if (selectedMessage?.id === messageId) {
-        closeMessageModal()
+      // Refresh conversation if modal is open
+      if (isModalOpen && selectedConversation) {
+        const updatedMessages = messages.filter(msg => msg.id !== messageId)
+        const conversationMessages = updatedMessages.filter(msg => {
+          const isSentByCurrentUser = msg.senderId === account?.id
+          const partnerId = isSentByCurrentUser ? msg.receiverId : msg.senderId
+          return partnerId === selectedConversation.partnerId
+        })
+        
+        if (conversationMessages.length === 0) {
+          closeConversationModal()
+        } else {
+          setSelectedConversation({
+            ...selectedConversation,
+            messages: conversationMessages.sort((a, b) => {
+              const timeA = getTimestamp(a.createdAt)
+              const timeB = getTimestamp(b.createdAt)
+              return timeA - timeB
+            })
+          })
+        }
       }
     } catch (error) {
       console.error('Error deleting message:', error)
@@ -215,55 +274,27 @@ const Messages = () => {
         </div>
       </div>
 
-      {/* Gmail-like Interface */}
+      {/* Facebook Messenger-like Interface */}
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body p-0">
-          {/* Tabs */}
-          <div className="flex items-center justify-between p-4">
-            <div className="flex">
-              <button
-                className={`btn btn-sm ${activeTab === 'inbox' ? 'btn-secondary text-white' : 'btn-outline text-secondary'}`}
-                onClick={() => setActiveTab('inbox')}
-              >
-                Inbox ({messages.filter(m => m.receiverId === account?.id).length})
-              </button>
-              <button
-                className={`btn btn-sm ${activeTab === 'sent' ? 'btn-secondary text-white' : 'btn-outline text-secondary'}`}
-                onClick={() => setActiveTab('sent')}
-              >
-                Sent ({messages.filter(m => m.senderId === account?.id).length})
-              </button>
-            </div>
-            
-            {/* Mark All as Read button for inbox */}
-            {activeTab === 'inbox' && messages.filter(m => m.receiverId === account?.id && m.status === 'unread').length > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="btn btn-outline btn-sm"
-              >
-                Mark All as Read
-              </button>
-            )}
-          </div>
-
-          {/* Message List */}
+          {/* Conversation List */}
           <div className="px-4 pb-4">
-            {filteredMessages.length === 0 ? (
+            {filteredConversations.length === 0 ? (
               <div className="text-center py-12">
-                {messages.length === 0 ? (
+                {conversations.length === 0 ? (
                   <>
-                    <p className="text-gray-500 mb-4">No messages found</p>
+                    <p className="text-gray-500 mb-4">No conversations found</p>
                     <button
                       onClick={() => router.push('/admin/message/create')}
                       className="btn btn-secondary"
                     >
                       <HiPlus className="mr-2" />
-                      Send First Message
+                      Start New Conversation
                     </button>
                   </>
                 ) : (
                   <>
-                    <p className="text-gray-500 mb-4">No messages in {activeTab}</p>
+                    <p className="text-gray-500 mb-4">No conversations match your search</p>
                     <button
                       onClick={() => setSearchTerm('')}
                       className="btn btn-outline btn-secondary"
@@ -275,37 +306,50 @@ const Messages = () => {
               </div>
             ) : (
               <div className="space-y-1">
-                {filteredMessages.map((message) => {
-                  const isUnread = activeTab === 'inbox' && message.status === 'unread'
-                  const isSentByCurrentUser = message.senderId === account?.id
+                {filteredConversations.map((conversation) => {
+                  const lastMessage = conversation.lastMessage
+                  const isUnread = conversation.unreadCount > 0
+                  const isSentByCurrentUser = lastMessage.senderId === account?.id
                   
                   return (
                     <div
-                      key={message.id}
+                      key={conversation.partnerId}
                       className={`p-4 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors ${
                         isUnread ? 'bg-primary/5 border-primary/20' : ''
                       }`}
-                      onClick={() => openMessageModal(message)}
+                      onClick={() => openConversationModal(conversation)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className={`font-semibold ${isUnread ? 'text-secondary' : 'text-gray-500'}`}>
-                              {isSentByCurrentUser ? message.receiverName : message.senderName}
+                            <div className={`font-semibold text-sm ${isUnread ? 'text-secondary' : 'text-gray-600'}`}>
+                              {conversation.partnerName}
                             </div>
-                            {message.attachment && (
+                            {lastMessage.attachment && (
                               <HiPaperClip className="w-4 h-4 text-gray-400" />
                             )}
                             {isUnread && (
                               <div className="w-2 h-2 bg-primary rounded-full"></div>
                             )}
+                            {isUnread && conversation.unreadCount > 1 && (
+                              <span className="badge badge-primary badge-sm">
+                                {conversation.unreadCount}
+                              </span>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {message.message}
+                          <div className="text-sm text-gray-500 truncate">
+                            {isSentByCurrentUser && <span className="text-gray-400 text-xs">You: </span>}
+                            {lastMessage.message}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-500 ml-4">
-                          {message.createdAt ? message.createdAt.toLocaleString() : message.createdAt}
+                        <div className="text-xs text-gray-500 ml-4 flex flex-col items-end">
+                          {lastMessage.createdAt && (
+                            <span>
+                              {typeof lastMessage.createdAt === 'string'
+                                ? new Date(lastMessage.createdAt).toLocaleString()
+                                : (lastMessage.createdAt as Date).toLocaleString()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -317,117 +361,25 @@ const Messages = () => {
         </div>
       </div>
 
-      {/* Message View Modal */}
-      {isModalOpen && selectedMessage && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-2xl">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-bold">Message</h3>
-              <button
-                onClick={closeMessageModal}
-                className="btn btn-sm btn-circle btn-ghost"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {/* Message Header */}
-              <div className="border-b border-base-300 pb-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-semibold">From:</span> {selectedMessage.senderName}
-                  </div>
-                  <div>
-                    <span className="font-semibold">To:</span> {selectedMessage.receiverName}
-                  </div>
-                  <div>
-                    <span className="font-semibold">Date:</span> {
-                      selectedMessage.createdAt ? selectedMessage.createdAt.toLocaleString() : selectedMessage.createdAt
-                    }
-                  </div>
-                  <div>
-                    <span className="font-semibold">Status:</span>
-                    <span className={`badge badge-sm ml-2 ${
-                      selectedMessage.status === 'read' ? 'badge-success' : 'badge-warning'
-                    }`}>
-                      {selectedMessage.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Message Content */}
-              <div className="prose max-w-none">
-                <div className="whitespace-pre-wrap bg-base-200 p-4 rounded-lg">
-                  {selectedMessage.message}
-                </div>
-              </div>
-
-              {/* Attachment */}
-              {selectedMessage.attachment && (
-                <div className="border-t border-base-300 pt-4">
-                  <div className="flex items-center justify-between p-3 bg-base-200 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <HiPaperClip className="w-5 h-5 text-gray-500" />
-                      <div>
-                        <div className="font-medium">Attachment</div>
-                        <div className="text-sm text-gray-500">
-                          Click to download
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => downloadAttachment(selectedMessage.attachment, 'attachment')}
-                      className="btn btn-sm btn-outline"
-                    >
-                      <HiDownload className="w-4 h-4 mr-1" />
-                      Download
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-action">
-              {activeTab === 'inbox' && selectedMessage.status === 'unread' && selectedMessage.receiverId === account?.id && (
-                <button 
-                  onClick={() => markAsRead(selectedMessage.id)} 
-                  className="btn btn-outline btn-xs text-secondary"
-                >
-                  Mark as Read
-                </button>
-              )}
-              {activeTab === 'inbox' && selectedMessage.receiverId === account?.id && (
-                <button 
-                  onClick={() => {
-                    if (confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
-                      deleteMessage(selectedMessage.id, selectedMessage.attachment)
-                    }
-                  }}
-                  className="btn btn-error btn-xs text-white"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs"></span>
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <HiTrash className="w-3 h-3 mr-1" />
-                      Delete
-                    </>
-                  )}
-                </button>
-              )}
-              <button onClick={closeMessageModal} className="btn btn-secondary btn-xs text-white">
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Conversation View Modal */}
+      <ConversationModal
+        isOpen={isModalOpen}
+        onClose={closeConversationModal}
+        conversation={selectedConversation}
+        account={account}
+        onDeleteConversation={() => {
+          if (selectedConversation && confirm('Are you sure you want to delete this conversation? All messages will be permanently deleted.')) {
+            const deletePromises = selectedConversation.messages.map(msg =>
+              deleteMessage(msg.id, msg.attachment)
+            )
+            Promise.all(deletePromises).then(() => {
+              closeConversationModal()
+            })
+          }
+        }}
+        isDeleting={isDeleting}
+        onDownloadAttachment={downloadAttachment}
+      />
     </div>
   )
 }
