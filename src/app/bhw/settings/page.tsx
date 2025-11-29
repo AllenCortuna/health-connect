@@ -10,6 +10,7 @@ import { HiLockClosed, HiUser, HiEye, HiEyeOff } from 'react-icons/hi'
 import { HiCog6Tooth } from 'react-icons/hi2'
 import type { BHW } from '@/interface/user'
 import { ToastContainer } from 'react-toastify'
+import { BHWProfilePictureUploader } from '@/components/bhw/BHWProfilePictureUploader'
 
 const BHWSettings = () => {
   const { account, setAccount } = useAccountStore()
@@ -282,123 +283,132 @@ const BHWSettings = () => {
             <p className="text-xs text-gray-600 mb-6">
               Update your personal information. Email cannot be changed for security reasons.
             </p>
-            
-            <form onSubmit={handleProfileSubmit} className="space-y-6">
 
-              {/* Name */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Full Name *</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={profileData.name}
-                  onChange={handleProfileInputChange}
-                  className={`input input-bordered ${profileErrors.name ? 'input-error' : ''}`}
-                  placeholder="Enter Full Name"
-                />
-                {profileErrors.name && <span className="label-text-alt text-error">{profileErrors.name}</span>}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-8 items-start">
+              <BHWProfilePictureUploader />
 
-              {/* Contact Number */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Contact Number</span>
-                </label>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  value={profileData.contactNumber}
-                  onChange={handleProfileInputChange}
-                  className={`input input-bordered ${profileErrors.contactNumber ? 'input-error' : ''}`}
-                  placeholder="Enter Contact Number"
-                />
-                {profileErrors.contactNumber && <span className="label-text-alt text-error">{profileErrors.contactNumber}</span>}
-              </div>
-
-              {/* Birth Date */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Birth Date *</span>
-                </label>
-                <input
-                  type="date"
-                  name="birthDate"
-                  value={profileData.birthDate}
-                  onChange={handleProfileInputChange}
-                  className={`input input-bordered ${profileErrors.birthDate ? 'input-error' : ''}`}
-                />
-                {profileErrors.birthDate && <span className="label-text-alt text-error">{profileErrors.birthDate}</span>}
-              </div>
-
-              {/* Gender and Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                {/* Name */}
                 <div className="form-control flex flex-col">
                   <label className="label">
-                    <span className="label-text font-semibold text-xs">Gender *</span>
+                    <span className="label-text font-semibold text-xs">Full Name *</span>
                   </label>
-                  <select
-                    name="gender"
-                    value={profileData.gender}
+                  <input
+                    type="text"
+                    name="name"
+                    value={profileData.name}
                     onChange={handleProfileInputChange}
-                    className="select select-bordered"
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
+                    className={`input input-bordered ${profileErrors.name ? 'input-error' : ''}`}
+                    placeholder="Enter Full Name"
+                  />
+                  {profileErrors.name && <span className="label-text-alt text-error">{profileErrors.name}</span>}
                 </div>
 
+                {/* Contact Number */}
                 <div className="form-control flex flex-col">
                   <label className="label">
-                    <span className="label-text font-semibold text-xs">Marital Status *</span>
+                    <span className="label-text font-semibold text-xs">Contact Number</span>
                   </label>
-                  <select
-                    name="status"
-                    value={profileData.status}
+                  <input
+                    type="tel"
+                    name="contactNumber"
+                    value={profileData.contactNumber}
                     onChange={handleProfileInputChange}
-                    className="select select-bordered"
-                  >
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                    <option value="widowed">Widowed</option>
-                    <option value="separated">Separated</option>
-                    <option value="divorced">Divorced</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Address *</span>
-                </label>
-                <textarea
-                  name="address"
-                  value={profileData.address}
-                  onChange={handleProfileInputChange}
-                  rows={3}
-                  className={`textarea textarea-bordered ${profileErrors.address ? 'textarea-error' : ''}`}
-                  placeholder="Enter Complete Address"
-                />
-                {profileErrors.address && <span className="label-text-alt text-error">{profileErrors.address}</span>}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-4 pt-4">
-                <button
-                  type="submit"
-                  className="btn btn-secondary"
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <span className="loading loading-spinner loading-sm"></span>
-                  ) : (
-                    'Update Profile'
+                    className={`input input-bordered ${profileErrors.contactNumber ? 'input-error' : ''}`}
+                    placeholder="Enter Contact Number"
+                  />
+                  {profileErrors.contactNumber && (
+                    <span className="label-text-alt text-error">{profileErrors.contactNumber}</span>
                   )}
-                </button>
-              </div>
-            </form>
+                </div>
+
+                {/* Birth Date */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Birth Date *</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="birthDate"
+                    value={profileData.birthDate}
+                    onChange={handleProfileInputChange}
+                    className={`input input-bordered ${profileErrors.birthDate ? 'input-error' : ''}`}
+                  />
+                  {profileErrors.birthDate && (
+                    <span className="label-text-alt text-error">{profileErrors.birthDate}</span>
+                  )}
+                </div>
+
+                {/* Gender and Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="form-control flex flex-col">
+                    <label className="label">
+                      <span className="label-text font-semibold text-xs">Gender *</span>
+                    </label>
+                    <select
+                      name="gender"
+                      value={profileData.gender}
+                      onChange={handleProfileInputChange}
+                      className="select select-bordered"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+
+                  <div className="form-control flex flex-col">
+                    <label className="label">
+                      <span className="label-text font-semibold text-xs">Marital Status *</span>
+                    </label>
+                    <select
+                      name="status"
+                      value={profileData.status}
+                      onChange={handleProfileInputChange}
+                      className="select select-bordered"
+                    >
+                      <option value="single">Single</option>
+                      <option value="married">Married</option>
+                      <option value="widowed">Widowed</option>
+                      <option value="separated">Separated</option>
+                      <option value="divorced">Divorced</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Address *</span>
+                  </label>
+                  <textarea
+                    name="address"
+                    value={profileData.address}
+                    onChange={handleProfileInputChange}
+                    rows={3}
+                    className={`textarea textarea-bordered ${profileErrors.address ? 'textarea-error' : ''}`}
+                    placeholder="Enter Complete Address"
+                  />
+                  {profileErrors.address && (
+                    <span className="label-text-alt text-error">{profileErrors.address}</span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-4 pt-4">
+                  <button
+                    type="submit"
+                    className="btn btn-secondary"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      'Update Profile'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

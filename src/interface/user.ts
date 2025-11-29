@@ -12,6 +12,7 @@ export interface Account {
     contactNumber?: string;
     address?: string;
     headOfHousehold?: string;
+    profilePicture?: string;
 }
 
 export interface Household {
@@ -60,4 +61,5 @@ export interface BHW{
     gender: 'male' | 'female';
     status: 'single' | 'married' | 'widowed' | 'separated' | 'divorced';
     createdAt?: Date | { toDate: () => Date };
+    profilePicture?: string; // URL of the profile picture in Firebase Storage
 }

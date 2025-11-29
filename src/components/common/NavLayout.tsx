@@ -14,6 +14,7 @@ import NavigationItem, { NavigationItemProps } from "./NavigationItem";
 import { useNavStore } from "@/store/navStore";
 import { useAccountStore } from "@/store/accountStore";
 import Image from "next/image";
+import type { Account, BHW } from "@/interface/user";
 
 // Types and Interfaces
 interface NavLayoutProps {
@@ -40,6 +41,10 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
     const [showSecondary, setShowSecondary] = useState(false);
     const { account } = useAccountStore();
 
+    const bhwAccount = account?.role === "bhw" ? (account as unknown as BHW) : undefined;
+    const bhwProfilePictureUrl = bhwAccount?.profilePicture;
+    const adminAccount = account?.role === "admin" ? (account as unknown as Account) : undefined;
+    const adminProfilePictureUrl = adminAccount?.profilePicture;
     /**
      * Handles user logout
      * Signs out the user and redirects to home page
@@ -161,16 +166,27 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
                                 <div className="text-[10px] sm:text-xs opacity-90">
                                     {account?.role === "bhw" && account?.name}
                                     {account?.role === "admin" && "Admin"}
-                                    {account?.role === "household" && account.headOfHousehold}
+                                    {account?.role === "household" && account?.headOfHousehold}
                                 </div>
                             </div>
-                            <Image
-                                src="/img/logo.png"
-                                alt="User Badge"
-                                width={36}
-                                height={36}
-                                className="object-contain border-2 shadow border-white rounded-full"
-                            />
+                            {bhwProfilePictureUrl || adminProfilePictureUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={bhwProfilePictureUrl || adminProfilePictureUrl}
+                                    alt="User Badge"
+                                    width={36}
+                                    height={36}
+                                    className="h-10 w-10 object-cover border-2 shadow border-white rounded-full"
+                                />
+                            ) : (
+                                <Image
+                                    src="/img/logo.png"
+                                    alt="User Badge"
+                                    width={36}
+                                    height={36}
+                                    className="object-cover border-2 shadow border-white rounded-full"
+                                />
+                            )}
                         </div>
                     </div>
                 </header>

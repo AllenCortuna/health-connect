@@ -8,6 +8,7 @@ import { useAccountStore } from '@/store/accountStore'
 import { successToast, errorToast } from '@/lib/toast'
 import { HiLockClosed, HiUser, HiEye, HiEyeOff } from 'react-icons/hi'
 import { HiCog6Tooth } from 'react-icons/hi2'
+import { AdminProfilePictureUploader } from '@/components/admin/AdminProfilePictureUploader'
 
 const AdminSettings = () => {
   const { account, setAccount } = useAccountStore()
@@ -260,87 +261,95 @@ const AdminSettings = () => {
             <p className="text-sm text-gray-600 mb-6">
               Update your personal information. Email cannot be changed for security reasons.
             </p>
-            
-            <form onSubmit={handleProfileSubmit} className="space-y-6">
-              {/* Email (Read-only) */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Email Address</span>
-                </label>
-                <input
-                  type="email"
-                  value={account?.email || ''}
-                  className="input input-bordered bg-base-200"
-                  disabled
-                />
-                <label className="label">
-                  <span className="label-text-alt text-gray-500">Email cannot be changed</span>
-                </label>
-              </div>
 
-              {/* Name */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Full Name *</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={profileData.name}
-                  onChange={handleProfileInputChange}
-                  className={`input input-bordered ${profileErrors.name ? 'input-error' : ''}`}
-                  placeholder="Enter Full Name"
-                />
-                {profileErrors.name && <span className="label-text-alt text-error">{profileErrors.name}</span>}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-8 items-start">
+              <AdminProfilePictureUploader />
 
-              {/* Contact Number */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Contact Number</span>
-                </label>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  value={profileData.contactNumber}
-                  onChange={handleProfileInputChange}
-                  className={`input input-bordered ${profileErrors.contactNumber ? 'input-error' : ''}`}
-                  placeholder="Enter Contact Number"
-                />
-                {profileErrors.contactNumber && <span className="label-text-alt text-error">{profileErrors.contactNumber}</span>}
-              </div>
+              <form onSubmit={handleProfileSubmit} className="space-y-6">
+                {/* Email (Read-only) */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Email Address</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={account?.email || ''}
+                    className="input input-bordered bg-base-200"
+                    disabled
+                  />
+                  <label className="label">
+                    <span className="label-text-alt text-gray-500">Email cannot be changed</span>
+                  </label>
+                </div>
 
-              {/* Address */}
-              <div className="form-control flex flex-col">
-                <label className="label">
-                  <span className="label-text font-semibold text-xs">Address *</span>
-                </label>
-                <textarea
-                  name="address"
-                  value={profileData.address}
-                  onChange={handleProfileInputChange}
-                  rows={3}
-                  className={`textarea textarea-bordered ${profileErrors.address ? 'textarea-error' : ''}`}
-                  placeholder="Enter Complete Address"
-                />
-                {profileErrors.address && <span className="label-text-alt text-error">{profileErrors.address}</span>}
-              </div>
+                {/* Name */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Full Name *</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={profileData.name}
+                    onChange={handleProfileInputChange}
+                    className={`input input-bordered ${profileErrors.name ? 'input-error' : ''}`}
+                    placeholder="Enter Full Name"
+                  />
+                  {profileErrors.name && <span className="label-text-alt text-error">{profileErrors.name}</span>}
+                </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-4 pt-4">
-                <button
-                  type="submit"
-                  className="btn btn-secondary"
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <span className="loading loading-spinner loading-sm"></span>
-                  ) : (
-                    'Update Profile'
+                {/* Contact Number */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Contact Number</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="contactNumber"
+                    value={profileData.contactNumber}
+                    onChange={handleProfileInputChange}
+                    className={`input input-bordered ${profileErrors.contactNumber ? 'input-error' : ''}`}
+                    placeholder="Enter Contact Number"
+                  />
+                  {profileErrors.contactNumber && (
+                    <span className="label-text-alt text-error">{profileErrors.contactNumber}</span>
                   )}
-                </button>
-              </div>
-            </form>
+                </div>
+
+                {/* Address */}
+                <div className="form-control flex flex-col">
+                  <label className="label">
+                    <span className="label-text font-semibold text-xs">Address *</span>
+                  </label>
+                  <textarea
+                    name="address"
+                    value={profileData.address}
+                    onChange={handleProfileInputChange}
+                    rows={3}
+                    className={`textarea textarea-bordered ${profileErrors.address ? 'textarea-error' : ''}`}
+                    placeholder="Enter Complete Address"
+                  />
+                  {profileErrors.address && (
+                    <span className="label-text-alt text-error">{profileErrors.address}</span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-4 pt-4">
+                  <button
+                    type="submit"
+                    className="btn btn-secondary"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      'Update Profile'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
