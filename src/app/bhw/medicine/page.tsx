@@ -12,6 +12,9 @@ import { successToast, errorToast } from '@/lib/toast'
 import ConfirmDeleteMedicineModal from '@/components/bhw/ConfirmDeleteMedicineModal'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
 
+//TODO: add filter by name
+//TODO: sort by name
+
 const Medicine = () => {
   const router = useRouter()
   const [medicines, setMedicines] = useState<Medicine[]>([])
