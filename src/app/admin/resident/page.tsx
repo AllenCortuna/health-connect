@@ -7,7 +7,6 @@ import type { Resident, Household } from '@/interface/user'
 import { useRouter } from 'next/navigation'
 import { FaPlus } from 'react-icons/fa'
 import ViewResidentModal from '@/components/bhw/ViewResidentModal'
-import StatusBadge from '@/components/common/StatusBadge'
 
 const Resident = () => {
   const router = useRouter()
@@ -17,7 +16,6 @@ const Resident = () => {
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [familyFilter, setFamilyFilter] = useState<string>('all')
   const [householdHeadFilter, setHouseholdHeadFilter] = useState<string>('all')
 
@@ -121,8 +119,6 @@ const Resident = () => {
       resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesStatus = statusFilter === 'all' || resident.status === statusFilter
-    
     const matchesFamily = familyFilter === 'all' || resident.familyNo === familyFilter
     
     // Get household head name for this resident
@@ -132,7 +128,7 @@ const Resident = () => {
     const matchesHouseholdHead = householdHeadFilter === 'all' || 
       householdHeadName === householdHeadFilter
     
-    return matchesSearch && matchesStatus && matchesFamily && matchesHouseholdHead
+    return matchesSearch && matchesFamily && matchesHouseholdHead
   })
 
 
@@ -177,16 +173,12 @@ const Resident = () => {
                 <span className="label-text font-semibold text-xs mb-2">Filter by Status</span>
               </label>
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
                 className="select select-bordered select-sm"
               >
-                <option value="all">All Statuses</option>
-                <option value="child">Child</option>
-                <option value="adult">Adult</option>
-                <option value="senior">Senior</option>
-                <option value="pwd">PWD</option>
-                <option value="pregnant">Pregnant</option>
+                <option value="all">All Household Heads</option>
+                {uniqueHouseholdHeads.map(head => (
+                  <option key={head} value={head}>{head}</option>
+                ))}
               </select>
             </div>
 
@@ -248,7 +240,6 @@ const Resident = () => {
                   <button
                     onClick={() => {
                       setSearchTerm('')
-                      setStatusFilter('all')
                       setFamilyFilter('all')
                       setHouseholdHeadFilter('all')
                     }}
@@ -266,7 +257,6 @@ const Resident = () => {
                   <tr>
                     <th>Name</th>
                     <th>Family Number</th>
-                    <th>Status</th>
                     <th>Gender</th>
                     <th>Actions</th>
                   </tr>
@@ -281,9 +271,6 @@ const Resident = () => {
                       </td>
                       <td>
                           {resident.familyNo}
-                      </td>
-                      <td>
-                        <StatusBadge status={resident.status} size="xs" />
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
