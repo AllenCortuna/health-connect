@@ -7,6 +7,7 @@ import AnnouncementModal from '@/components/admin/AnnouncementModal'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 
 function StatCard({ label, value, color }: { label: string; value: number | string; color: 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'error' }) {
   return (
@@ -17,7 +18,19 @@ function StatCard({ label, value, color }: { label: string; value: number | stri
   )
 }
 
-function MonthCalendar({ date, onDayClick }: { date: Date; onDayClick: (day: number, fullDate: Date) => void }) {
+function MonthCalendar({ 
+  date, 
+  onDayClick, 
+  onPreviousMonth, 
+  onNextMonth, 
+  onToday 
+}: { 
+  date: Date
+  onDayClick: (day: number, fullDate: Date) => void
+  onPreviousMonth: () => void
+  onNextMonth: () => void
+  onToday: () => void
+}) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
 
   const { monthLabel, weeks, today } = useMemo(() => {
@@ -93,11 +106,41 @@ function MonthCalendar({ date, onDayClick }: { date: Date; onDayClick: (day: num
     onDayClick(day, fullDate)
   }
 
+  const isCurrentMonth = useMemo(() => {
+    const today = new Date()
+    return today.getMonth() === date.getMonth() && today.getFullYear() === date.getFullYear()
+  }, [date])
+
   return (
     <div className="card bg-base-100 shadow-lg">
       <div className="card-body">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-lg text-secondary font-bold">{monthLabel}</div>
+          <button
+            onClick={onPreviousMonth}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label="Previous month"
+          >
+            <HiChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="text-lg text-secondary font-bold">{monthLabel}</div>
+            {!isCurrentMonth && (
+              <button
+                onClick={onToday}
+                className="btn btn-ghost btn-xs"
+                aria-label="Go to today"
+              >
+                Today
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onNextMonth}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label="Next month"
+          >
+            <HiChevronRight className="w-5 h-5" />
+          </button>
         </div>
         <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold opacity-70 mb-2">
           {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
@@ -141,6 +184,7 @@ export default function AdminDashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
 
   useEffect(() => {
     const fetchAllAnnouncements = async () => {
@@ -182,6 +226,18 @@ export default function AdminDashboardPage() {
     return allAnnouncements.filter(announcement => announcement.date === dateString)
   }
 
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+  }
+
+  const goToToday = () => {
+    setCurrentMonth(new Date())
+  }
+
   if (stats.isLoading) {
     return (
       <div className="container mx-auto p-6">
@@ -197,7 +253,7 @@ export default function AdminDashboardPage() {
       {/* Top stats */}
       <div className="flex flex-wrap flex-row gap-4 mb-6">
         <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
-        <StatCard label="Normal Residents" value={stats.normalResidents} color="success" />
+        <StatCard label="Adults" value={stats.normalResidents} color="success" />
         <StatCard label="Pregnants" value={stats.pregnantResidents} color="accent" />
         <StatCard label="PWD's" value={stats.pwdResidents} color="info" />
         <StatCard label="Seniors" value={stats.seniorResidents} color="error" />
@@ -227,7 +283,13 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="lg:col-span-2">
-          <MonthCalendar date={new Date()} onDayClick={handleDayClick} />
+          <MonthCalendar 
+            date={currentMonth} 
+            onDayClick={handleDayClick}
+            onPreviousMonth={goToPreviousMonth}
+            onNextMonth={goToNextMonth}
+            onToday={goToToday}
+          />
         </div>
       </div>
 

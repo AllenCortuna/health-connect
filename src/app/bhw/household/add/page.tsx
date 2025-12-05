@@ -65,6 +65,7 @@ const AddHousehold = () => {
       const householdData = {
         ...formData,
         totalMembers: 0, // Start with 0 members
+        role: 'household',
         createdAt: serverTimestamp()
       }
 

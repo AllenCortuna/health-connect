@@ -30,6 +30,7 @@ export interface Household {
 export interface Resident {
     id: string;
     householdId: string;
+    role: 'household';
     familyNo: string;
     fullName: string;
     firstName: string;

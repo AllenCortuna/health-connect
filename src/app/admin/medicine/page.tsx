@@ -5,6 +5,7 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { FaPlus } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
@@ -96,6 +97,13 @@ const Medicine = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Medicines</h1>
+        <button
+          onClick={() => router.push('/admin/medicine/add')}
+          className="btn btn-secondary btn-sm"
+        >
+          <FaPlus className="mr-2" />
+          Add Medicine
+        </button>
       </div>
 
       {/* Search and Filter Section */}
@@ -176,7 +184,7 @@ const Medicine = () => {
                 <>
                   <p className="text-gray-500 mb-4">No medicines found</p>
                   <button
-                    onClick={() => router.push('/bhw/medicine/add')}
+                    onClick={() => router.push('/admin/medicine/add')}
                     className="btn btn-secondary"
                   >
                     <FaPlus className="mr-2" />
@@ -255,6 +263,13 @@ const Medicine = () => {
                         >
                           View
                         </button>
+                        <Link
+                          href={`/admin/medicine/edit?id=${medicine.id}`}
+                          className="btn btn-outline btn-secondary btn-xs"
+                          title="Edit Medicine"
+                        >
+                          Edit
+                        </Link>
                       </td>
                     </tr>
                   ))}
