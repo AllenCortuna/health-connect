@@ -1,17 +1,181 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAccountStore } from '@/store/accountStore'
 import { useResidentDashboard } from '@/hooks/useResidentDashboard'
 import { useRouter } from 'next/navigation'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
+import type { Announcement } from '@/interface/data'
+import AnnouncementModal from '@/components/admin/AnnouncementModal'
 import { 
   HiBell, 
   HiUser, 
-  HiHeart, 
-  HiCalendar,
-  HiExclamationCircle,
+  HiHeart,
 } from 'react-icons/hi'
 import { HiChatBubbleBottomCenterText } from 'react-icons/hi2'
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
+
+function MonthCalendar({ 
+  date, 
+  onDayClick, 
+  onPreviousMonth, 
+  onNextMonth, 
+  onToday 
+}: { 
+  date: Date
+  onDayClick: (day: number, fullDate: Date) => void
+  onPreviousMonth: () => void
+  onNextMonth: () => void
+  onToday: () => void
+}) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+
+  const { monthLabel, weeks, today } = useMemo(() => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const monthLabelLocal = date.toLocaleString(undefined, { month: 'long', year: 'numeric' })
+    const days: (number | null)[] = []
+    const startWeekday = firstDay.getDay() // 0-6
+    for (let i = 0; i < startWeekday; i++) days.push(null)
+    for (let d = 1; d <= lastDay.getDate(); d++) days.push(d)
+    while (days.length % 7 !== 0) days.push(null)
+    const weeksLocal: (number | null)[][] = []
+    for (let i = 0; i < days.length; i += 7) weeksLocal.push(days.slice(i, i + 7))
+    const todayLocal = new Date()
+    return { monthLabel: monthLabelLocal, weeks: weeksLocal, today: todayLocal }
+  }, [date])
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const announcementsRef = collection(db, 'announcements')
+        const q = query(announcementsRef, orderBy('date', 'asc'))
+        const querySnapshot = await getDocs(q)
+        
+        const announcementsData: Announcement[] = []
+        querySnapshot.forEach((doc) => {
+          const data = doc.data()
+          const announcement = {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt
+          } as Announcement
+          
+          announcementsData.push(announcement)
+        })
+        
+        setAnnouncements(announcementsData)
+      } catch (error) {
+        console.error('Error fetching announcements:', error)
+      }
+    }
+
+    fetchAnnouncements()
+  }, [date])
+
+  const getAnnouncementCount = (day: number | null): number => {
+    if (!day) return 0
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const dayDate = new Date(year, month, day)
+    const dateString = dayDate.toISOString().split('T')[0] // YYYY-MM-DD format
+    
+    return announcements.filter(announcement => announcement.date === dateString).length
+  }
+
+  const isToday = (day: number | null) => {
+    if (!day) return false
+    return (
+      today.getDate() === day &&
+      today.getMonth() === date.getMonth() &&
+      today.getFullYear() === date.getFullYear()
+    )
+  }
+
+  const handleDayClick = (day: number | null) => {
+    if (!day) return
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const fullDate = new Date(year, month, day)
+    onDayClick(day, fullDate)
+  }
+
+  const isCurrentMonth = useMemo(() => {
+    const today = new Date()
+    return today.getMonth() === date.getMonth() && today.getFullYear() === date.getFullYear()
+  }, [date])
+
+  return (
+    <div className="card bg-base-100 shadow-lg">
+      <div className="card-body">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            onClick={onPreviousMonth}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label="Previous month"
+          >
+            <HiChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="text-lg text-secondary font-bold">{monthLabel}</div>
+            {!isCurrentMonth && (
+              <button
+                onClick={onToday}
+                className="btn btn-ghost btn-xs"
+                aria-label="Go to today"
+              >
+                Today
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onNextMonth}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label="Next month"
+          >
+            <HiChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold opacity-70 mb-2">
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
+            <div key={d}>{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {weeks.flat().map((d, idx) => {
+            const count = getAnnouncementCount(d)
+            const isTodayDay = isToday(d)
+            
+            return (
+              <div
+                key={idx}
+                onClick={() => handleDayClick(d)}
+                className={`h-10 flex flex-col items-center justify-center rounded-md relative cursor-pointer transition-all hover:opacity-80 ${
+                  d 
+                    ? isTodayDay
+                      ? 'bg-green-500 text-white font-bold' 
+                      : 'bg-base-200' 
+                    : 'opacity-30 cursor-not-allowed'
+                }`}
+              >
+                <span>{d ?? ''}</span>
+                {count > 0 && (
+                  <span className={`absolute top-0 right-0 text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center bg-red-500 text-white`}>
+                    {count}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const Dashboard = () => {
   const { account } = useAccountStore()
@@ -23,8 +187,64 @@ const Dashboard = () => {
     healthInfo,
     isLoading,
     formatDate,
-    formatAnnouncementDate
   } = useResidentDashboard()
+  
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+
+  useEffect(() => {
+    const fetchAllAnnouncements = async () => {
+      try {
+        const announcementsRef = collection(db, 'announcements')
+        const q = query(announcementsRef, orderBy('date', 'asc'))
+        const querySnapshot = await getDocs(q)
+        
+        const announcementsData: Announcement[] = []
+        querySnapshot.forEach((doc) => {
+          const data = doc.data()
+          const announcement = {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt
+          } as Announcement
+          
+          announcementsData.push(announcement)
+        })
+        
+        setAllAnnouncements(announcementsData)
+      } catch (error) {
+        console.error('Error fetching announcements:', error)
+      }
+    }
+
+    fetchAllAnnouncements()
+  }, [])
+
+  const handleDayClick = (day: number, fullDate: Date) => {
+    setSelectedDate(fullDate)
+    setIsModalOpen(true)
+  }
+
+  const getAnnouncementsForDate = (date: Date | null): Announcement[] => {
+    if (!date) return []
+    const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD format
+    return allAnnouncements.filter(announcement => announcement.date === dateString)
+  }
+
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
+  }
+
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
+  }
+
+  const goToToday = () => {
+    setCurrentMonth(new Date())
+  }
 
   if (isLoading) {
     return (
@@ -166,49 +386,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Upcoming Announcements */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="card-title text-lg font-bold text-secondary">
-                <HiBell className="w-8 h-8" />
-                Upcoming Events
-              </h2>
-            </div>
-            
-            {upcomingAnnouncements.length === 0 ? (
-              <div className="text-center py-8">
-                <HiCalendar className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-xs">No upcoming events</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingAnnouncements.map((announcement) => (
-                  <div 
-                    key={announcement.id}
-                    className="p-3 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition-colors"
-                    onClick={() => router.push('/resident/announcement')}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-sm truncate">
-                            {announcement.title}
-                          </h3>
-                          {announcement.important && (
-                            <HiExclamationCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {formatAnnouncementDate(announcement.date, announcement.time)}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Calendar */}
+        <div className="lg:col-span-2">
+          <MonthCalendar 
+            date={currentMonth} 
+            onDayClick={handleDayClick}
+            onPreviousMonth={goToPreviousMonth}
+            onNextMonth={goToNextMonth}
+            onToday={goToToday}
+          />
         </div>
       </div>
 
@@ -305,6 +491,17 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedDate(null)
+        }}
+        date={selectedDate}
+        announcements={getAnnouncementsForDate(selectedDate)}
+      />
     </div>
   )
 }
