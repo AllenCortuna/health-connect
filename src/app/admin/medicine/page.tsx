@@ -1,14 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { FaPlus } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
+import ReleaseMedicineModal from '@/components/admin/ReleaseMedicineModal'
+import { successToast, errorToast } from '@/lib/toast'
 
 const Medicine = () => {
   const router = useRouter()
@@ -16,6 +17,9 @@ const Medicine = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [medicineToRelease, setMedicineToRelease] = useState<Medicine | null>(null)
+  const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
+  const [isReleasing, setIsReleasing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -70,6 +74,76 @@ const Medicine = () => {
     setSelectedMedicine(null)
   }
 
+  const openReleaseModal = (medicine: Medicine) => {
+    setMedicineToRelease(medicine)
+    setIsReleaseModalOpen(true)
+  }
+
+  const closeReleaseModal = () => {
+    setIsReleaseModalOpen(false)
+    setMedicineToRelease(null)
+  }
+
+  const handleReleaseMedicine = async (amount: number, date: Date, remarks: string) => {
+    if (!medicineToRelease) return
+
+    setIsReleasing(true)
+    try {
+      // Validate again before releasing
+      if (amount > medicineToRelease.quantity) {
+        errorToast('Cannot release more than available quantity')
+        return
+      }
+
+      // Check if expired
+      if (medicineToRelease.expDate instanceof Date) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const expDate = new Date(medicineToRelease.expDate)
+        expDate.setHours(0, 0, 0, 0)
+        
+        if (expDate <= today) {
+          errorToast('Cannot release expired medicine')
+          return
+        }
+      }
+
+      // Calculate new quantity
+      const newQuantity = medicineToRelease.quantity - amount
+      const newStatus = newQuantity === 0 ? 'out of stock' : 'available'
+
+      // Update medicine quantity and status
+      const medicineRef = doc(db, 'medicine', medicineToRelease.id)
+      await updateDoc(medicineRef, {
+        quantity: newQuantity,
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      })
+
+      // Create release record
+      await addDoc(collection(db, 'medicine-released'), {
+        medicineId: medicineToRelease.id,
+        medicineCode: medicineToRelease.medCode,
+        medicineName: medicineToRelease.name,
+        amount: amount,
+        releaseDate: date,
+        remarks: remarks || '',
+        previousQuantity: medicineToRelease.quantity,
+        newQuantity: newQuantity,
+        createdAt: serverTimestamp()
+      })
+
+      successToast('Medicine released successfully!')
+      closeReleaseModal()
+      fetchMedicines() // Refresh the list
+    } catch (error) {
+      console.error('Error releasing medicine:', error)
+      errorToast('Failed to release medicine. Please try again.')
+    } finally {
+      setIsReleasing(false)
+    }
+  }
+
   // Filter and search medicines
   const filteredMedicines = medicines.filter((medicine) => {
     const matchesSearch = searchTerm === '' || 
@@ -97,6 +171,12 @@ const Medicine = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Medicines</h1>
+        <button
+          onClick={() => router.push('/admin/medicine/released')}
+          className="btn btn-secondary btn-sm ml-auto mr-5"
+        >
+          View Released Medicines
+        </button>
         <button
           onClick={() => router.push('/admin/medicine/add')}
           className="btn btn-secondary btn-sm"
@@ -159,18 +239,6 @@ const Medicine = () => {
                 <option value="injection">Injection</option>
                 <option value="drops">Drops</option>
               </select>
-            </div>
-
-            {/* Results Count */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Results</span>
-              </label>
-              <div className="input input-bordered input-sm bg-base-200 flex items-center">
-                <span className="text-sm">
-                  {filteredMedicines.length} of {medicines.length} medicines
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -263,13 +331,14 @@ const Medicine = () => {
                         >
                           View
                         </button>
-                        <Link
-                          href={`/admin/medicine/edit?id=${medicine.id}`}
-                          className="btn btn-outline btn-secondary btn-xs"
-                          title="Edit Medicine"
+                        <button
+                          onClick={() => openReleaseModal(medicine)}
+                          className="btn btn-outline btn-primary btn-xs"
+                          title="Release Medicine"
+                          disabled={medicine.quantity === 0 || (medicine.expDate instanceof Date && medicine.expDate <= new Date())}
                         >
-                          Edit
-                        </Link>
+                          Release
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -285,6 +354,15 @@ const Medicine = () => {
         medicine={selectedMedicine}
         isOpen={isModalOpen}
         onClose={closeModal}
+      />
+
+      {/* Release Medicine Modal */}
+      <ReleaseMedicineModal
+        medicine={medicineToRelease}
+        isOpen={isReleaseModalOpen}
+        onClose={closeReleaseModal}
+        onRelease={handleReleaseMedicine}
+        isReleasing={isReleasing}
       />
     </div>
   )

@@ -1,19 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, doc, deleteDoc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
-import { FaPlus, FaTrash } from 'react-icons/fa'
+import { FaPlus } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
-import Link from 'next/link'
-import { successToast, errorToast } from '@/lib/toast'
-import ConfirmDeleteMedicineModal from '@/components/bhw/ConfirmDeleteMedicineModal'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
-
-//TODO: add filter by name
-//TODO: sort by name
 
 const Medicine = () => {
   const router = useRouter()
@@ -21,9 +15,6 @@ const Medicine = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -78,35 +69,6 @@ const Medicine = () => {
     setSelectedMedicine(null)
   }
 
-  const openDeleteModal = (medicine: Medicine) => {
-    setMedicineToDelete(medicine)
-    setIsDeleteModalOpen(true)
-  }
-
-  const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false)
-    setMedicineToDelete(null)
-  }
-
-  const handleDeleteMedicine = async () => {
-    if (!medicineToDelete) return
-
-    setIsDeleting(true)
-    try {
-      const medicineRef = doc(db, 'medicine', medicineToDelete.id)
-      await deleteDoc(medicineRef)
-      
-      successToast('Medicine deleted successfully!')
-      closeDeleteModal()
-      fetchMedicines() // Refresh the list
-    } catch (error) {
-      console.error('Error deleting medicine:', error)
-      errorToast('Failed to delete medicine. Please try again.')
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
   // Filter and search medicines
   const filteredMedicines = medicines.filter((medicine) => {
     const matchesSearch = searchTerm === '' || 
@@ -134,13 +96,6 @@ const Medicine = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Medicines</h1>
-        <button
-          onClick={() => router.push('/bhw/medicine/add')}
-          className="btn btn-secondary btn-sm"
-        >
-          <FaPlus className="mr-2" />
-          Add Medicine
-        </button>
       </div>
 
       {/* Search and Filter Section */}
@@ -196,18 +151,6 @@ const Medicine = () => {
                 <option value="injection">Injection</option>
                 <option value="drops">Drops</option>
               </select>
-            </div>
-
-            {/* Results Count */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Results</span>
-              </label>
-              <div className="input input-bordered input-sm bg-base-200 flex items-center">
-                <span className="text-sm">
-                  {filteredMedicines.length} of {medicines.length} medicines
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -300,20 +243,6 @@ const Medicine = () => {
                         >
                           View
                         </button>
-                        <Link
-                          href={`/bhw/medicine/edit?id=${medicine.id}`}
-                          className="btn btn-outline btn-secondary btn-xs"
-                          title="Edit Medicine"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => openDeleteModal(medicine)}
-                          className="btn btn-outline btn-error btn-xs"
-                          title="Delete Medicine"
-                        >
-                          <FaTrash />
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -329,15 +258,6 @@ const Medicine = () => {
         medicine={selectedMedicine}
         isOpen={isModalOpen}
         onClose={closeModal}
-      />
-
-      {/* Delete Medicine Modal */}
-      <ConfirmDeleteMedicineModal
-        medicine={medicineToDelete}
-        isOpen={isDeleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={handleDeleteMedicine}
-        isDeleting={isDeleting}
       />
     </div>
   )
