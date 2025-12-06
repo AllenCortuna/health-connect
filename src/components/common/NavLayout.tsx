@@ -176,7 +176,7 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
                                     alt="User Badge"
                                     width={36}
                                     height={36}
-                                    className="h-10 w-10 object-cover border-2 shadow border-white rounded-full"
+                                    className="h-10 w-10 object-cover border-2 shadow border-white bg-white rounded-full"
                                 />
                             ) : (
                                 <Image

@@ -87,13 +87,6 @@ const Resident = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Residents</h1>
-        <button
-          onClick={() => router.push('/bhw/resident/add')}
-          className="btn btn-secondary btn-sm"
-        >
-          <FaPlus className="mr-2" />
-          Add Resident
-        </button>
       </div>
 
       {/* Search and Filter Section */}
@@ -117,14 +110,14 @@ const Resident = () => {
             {/* Status Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Status</span>
+                <span className="label-text font-semibold text-xs mb-2">Status</span>
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="select select-bordered select-sm"
               >
-                <option value="all">All Statuses</option>
+                <option value="all">All</option>
                 <option value="child">Child</option>
                 <option value="adult">Adult</option>
                 <option value="senior">Senior</option>
