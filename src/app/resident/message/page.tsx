@@ -42,6 +42,19 @@ const Messages = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Update selected conversation when messages change
+  useEffect(() => {
+    if (selectedConversation && conversations.length > 0) {
+      const updatedConversation = conversations.find(
+        conv => conv.partnerId === selectedConversation.partnerId
+      )
+      if (updatedConversation) {
+        setSelectedConversation(updatedConversation)
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, selectedConversation?.partnerId])
+
   const fetchMessages = async () => {
     try {
       setIsLoading(true)
@@ -174,6 +187,12 @@ const Messages = () => {
     setIsModalOpen(false)
     // Refresh messages to update unread counts
     fetchMessages()
+  }
+
+  // Handle reply sent - refresh messages
+  const handleReplySent = async () => {
+    // Refresh all messages - the useEffect will automatically update the selected conversation
+    await fetchMessages()
   }
 
   // Download attachment
@@ -384,6 +403,7 @@ const Messages = () => {
         }}
         isDeleting={isDeleting}
         onDownloadAttachment={downloadAttachment}
+        onReplySent={handleReplySent}
       />
     </div>
   )
