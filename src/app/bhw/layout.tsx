@@ -25,7 +25,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       notificationCount: unreadCount
     },
     { href: "/bhw/announcement", icon: HiBell, label: "Announcements"},
-    { href: "/bhw/reports", icon: HiPrinter, label: "Print Reports"},
+    { href: "/bhw/reports", icon: HiPrinter, label: "Reports"},
     { href: "/bhw/settings", icon: IoMdSettings, label: "Settings"},
   ];
 
