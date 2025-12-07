@@ -79,21 +79,6 @@ export default function AdminReportsPage() {
     }
   }
   
-  const getBHWName = (bhwId: string): string => {
-    const bhw = bhws.find(b => b.id === bhwId)
-    return bhw?.name || 'Unknown BHW'
-  }
-  
-  const formatWeekRange = (weekStartISO: string): string => {
-    try {
-      const weekStart = parseISO(weekStartISO)
-      const weekEnd = getWeekEnd(weekStart)
-      return `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
-    } catch {
-      return weekStartISO
-    }
-  }
-  
   const formatDate = (dateString: string): string => {
     try {
       return format(parseISO(dateString), 'MMM d, yyyy h:mm a')
