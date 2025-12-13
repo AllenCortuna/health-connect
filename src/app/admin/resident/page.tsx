@@ -82,27 +82,6 @@ const Resident = () => {
     return map
   }, [households])
 
-  // Get unique family numbers and household head names for filters
-  const uniqueFamilyNumbers = useMemo(() => {
-    const familyNos = new Set<string>()
-    residents.forEach(resident => {
-      if (resident.familyNo) {
-        familyNos.add(resident.familyNo)
-      }
-    })
-    return Array.from(familyNos).sort()
-  }, [residents])
-
-  const uniqueHouseholdHeads = useMemo(() => {
-    const heads = new Set<string>()
-    households.forEach(household => {
-      if (household.headOfHousehold) {
-        heads.add(household.headOfHousehold)
-      }
-    })
-    return Array.from(heads).sort()
-  }, [households])
-
   const openModal = (resident: Resident) => {
     setSelectedResident(resident)
     setIsModalOpen(true)
@@ -126,7 +105,7 @@ const Resident = () => {
       ? householdHeadMap.get(resident.householdId) || ''
       : ''
     const matchesHouseholdHead = householdHeadFilter === 'all' || 
-      householdHeadName === householdHeadFilter
+      householdHeadName.toLowerCase().includes(householdHeadFilter.toLowerCase())
     
     return matchesSearch && matchesFamily && matchesHouseholdHead
   })
@@ -167,53 +146,32 @@ const Resident = () => {
               />
             </div>
 
-            {/* Status Filter */}
+            {/* Household Head Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Status</span>
+                <span className="label-text font-semibold text-xs mb-2">Household Head</span>
               </label>
-              <select
-                className="select select-bordered select-sm"
-              >
-                <option value="all">All Household Heads</option>
-                {uniqueHouseholdHeads.map(head => (
-                  <option key={head} value={head}>{head}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                placeholder="Search by household head..."
+                value={householdHeadFilter === 'all' ? '' : householdHeadFilter}
+                onChange={(e) => setHouseholdHeadFilter(e.target.value === '' ? 'all' : e.target.value)}
+                className="input input-bordered input-sm"
+              />
             </div>
 
             {/* Family Filter */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Family</span>
+                <span className="label-text font-semibold text-xs mb-2">Family</span>
               </label>
-              <select
-                value={familyFilter}
-                onChange={(e) => setFamilyFilter(e.target.value)}
-                className="select select-bordered select-sm"
-              >
-                <option value="all">All Families</option>
-                {uniqueFamilyNumbers.map(familyNo => (
-                  <option key={familyNo} value={familyNo}>{familyNo}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Household Head Filter */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Household Head</span>
-              </label>
-              <select
-                value={householdHeadFilter}
-                onChange={(e) => setHouseholdHeadFilter(e.target.value)}
-                className="select select-bordered select-sm"
-              >
-                <option value="all">All Household Heads</option>
-                {uniqueHouseholdHeads.map(head => (
-                  <option key={head} value={head}>{head}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                placeholder="Search by family number..."
+                value={familyFilter === 'all' ? '' : familyFilter}
+                onChange={(e) => setFamilyFilter(e.target.value === '' ? 'all' : e.target.value)}
+                className="input input-bordered input-sm"
+              />
             </div>
           </div>
         </div>

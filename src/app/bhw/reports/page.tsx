@@ -5,7 +5,7 @@ import { collection, getDocs, query, where, addDoc, updateDoc, doc } from 'fireb
 import { db } from '@/lib/firebase'
 import { useAccountStore } from '@/store/accountStore'
 import { startOfWeek, format, subWeeks, addWeeks } from 'date-fns'
-import { HiCalendar, HiCheckCircle, HiXCircle, HiChevronLeft, HiChevronRight, HiPencil } from 'react-icons/hi'
+import { HiCalendar, HiCheckCircle, HiXCircle, HiChevronLeft, HiChevronRight, HiPencil, HiPrinter } from 'react-icons/hi'
 import { useRouter } from 'next/navigation'
 import type { Report } from '@/interface/report'
 import type { BHW } from '@/interface/user'
@@ -270,14 +270,24 @@ export default function ReportsPage() {
       {existingReport && (
         <div className="alert alert-info mb-6">
           <HiCheckCircle className="w-5 h-5" />
-          <div className="flex-1">
-            <span>You have already submitted a report for this week. You can update it below or </span>
+          <div className="flex-1 flex items-center justify-between gap-4">
+            <div>
+              <span>You have already submitted a report for this week. You can update it below or </span>
+              <button
+                type="button"
+                onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
+                className="btn btn-link btn-sm p-0 h-auto min-h-0 text-info-content underline"
+              >
+                edit it here
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
-              className="btn btn-link btn-sm p-0 h-auto min-h-0 text-info-content underline"
+              onClick={() => router.push(`/bhw/reports/print?id=${existingReport.id}`)}
+              className="btn btn-sm btn-info"
             >
-              edit it here
+              <HiPrinter className="w-4 h-4" />
+              Print
             </button>
           </div>
         </div>
@@ -319,7 +329,7 @@ export default function ReportsPage() {
               Select all tasks you completed during this week. At least one task must be selected.
             </p>
             
-            <div className="max-h-96 overflow-y-auto">
+            <div className="h-full overflow-y-auto">
               {BHW_TASKS.map((task, index) => (
                 <label key={index} className="flex items-start gap-2 p-3 rounded-lg hover:bg-base-200 cursor-pointer">
                   <input
@@ -346,14 +356,24 @@ export default function ReportsPage() {
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
           {existingReport && (
-            <button
-              type="button"
-              onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
-              className="btn btn-outline"
-            >
-              <HiPencil className="w-4 h-4" />
-              Edit Report
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => router.push(`/bhw/reports/print?id=${existingReport.id}`)}
+                className="btn btn-outline"
+              >
+                <HiPrinter className="w-4 h-4" />
+                Print Report
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
+                className="btn btn-outline"
+              >
+                <HiPencil className="w-4 h-4" />
+                Edit Report
+              </button>
+            </>
           )}
           <button
             type="submit"

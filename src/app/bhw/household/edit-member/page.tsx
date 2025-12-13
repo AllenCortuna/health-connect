@@ -144,7 +144,6 @@ const EditHouseholdMember = () => {
     if (!formData.firstName?.trim()) newErrors.firstName = 'First Name is required'
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last Name is required'
     if (!formData.birthPlace?.trim()) newErrors.birthPlace = 'Birth Place is required'
-    if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.email?.trim()) newErrors.email = 'Email is required'
     
     // Email validation

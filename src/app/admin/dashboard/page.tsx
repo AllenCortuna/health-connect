@@ -297,15 +297,55 @@ export default function AdminDashboardPage() {
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
           <div className="text-lg text-secondary font-bold mb-4">List of Residents</div>
-          <div className="overflow-x-auto">
+          
+          {/* Mobile: Card layout */}
+          <div className="md:hidden space-y-3">
+            {stats.recentResidents.length === 0 ? (
+              <div className="text-center text-sm text-gray-500 py-6">No residents found</div>
+            ) : (
+              stats.recentResidents.map((r) => {
+                const birth = r.birthDate instanceof Date ? r.birthDate : undefined
+                const age = birth ? Math.max(0, new Date(Date.now() - birth.getTime()).getUTCFullYear() - 1970) : ''
+                return (
+                  <div key={r.id} className="bg-base-200 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-sm text-zinc-700">{r.fullName ?? ''}</div>
+                      <StatusBadge status={r.status} size="xs" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-zinc-500">
+                      <div>
+                        <span className="font-medium">Age: </span>
+                        {age}
+                      </div>
+                      <div>
+                        <span className="font-medium">Gender: </span>
+                        <span className="capitalize">{r.gender}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Height/Weight: </span>
+                        {r.height && r.weight ? `${r.height} cm / ${r.weight} kg` : '—'}
+                      </div>
+                      <div>
+                        <span className="font-medium">DOB: </span>
+                        {birth ? birth.toLocaleDateString() : '—'}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+
+          {/* Desktop: Table layout */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="table table-zebra w-full">
               <thead>
                 <tr>
                   <th>Age</th>
                   <th>Name</th>
-                  <th>H/W</th>
+                  <th>Height/Weight</th>
                   <th>Gender</th>
-                  <th>Birth Date</th>
+                  <th>Date of Birth</th>
                   <th>Status</th>
                 </tr>
               </thead>

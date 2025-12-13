@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getCountFromServer, getDocs, orderBy, query, where, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Resident } from '@/interface/user'
-import type { Announcement } from '@/interface/data'
 
 export interface AdminDashboardStats {
   totalPopulation: number
@@ -50,7 +49,7 @@ function useAdminDashboard(): AdminDashboardStats {
         const residentCol = collection(db, 'resident')
         const messageCol = collection(db, 'messages')
         const reportsCol = collection(db, 'reports')
-        const eventsCol = collection(db, 'announcement')
+        const eventsCol = collection(db, 'announcements')
 
         // Counts
         const [
@@ -89,16 +88,19 @@ function useAdminDashboard(): AdminDashboardStats {
           patientsServed = 0
         }
 
-        // Upcoming events: announcements with type === 'event' and date in future
+        // Upcoming events: announcements with date >= today (date is stored as YYYY-MM-DD string)
         let upcomingEvents = 0
         try {
-          const eventsSnap = await getDocs(query(eventsCol, orderBy('date', 'asc')))
-          const now = new Date()
-          upcomingEvents = eventsSnap.docs.filter(d => {
-            const data = d.data() as Announcement & { date?: FirestoreDateLike }
-            const jsDate = normalizeToDate(data.date)
-            return !!jsDate && jsDate >= now
-          }).length
+          const today = new Date()
+          const todayString = today.toISOString().split('T')[0] // YYYY-MM-DD format
+          const eventsSnap = await getDocs(
+            query(
+              eventsCol,
+              where('date', '>=', todayString),
+              orderBy('date', 'asc')
+            )
+          )
+          upcomingEvents = eventsSnap.size
         } catch {
           upcomingEvents = 0
         }

@@ -1,8 +1,8 @@
 import React, { useRef } from 'react'
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { Medicine } from '@/interface/data'
 import StatusBadge from '@/components/common/StatusBadge'
-import { FaPrint, FaTimes, FaDownload } from 'react-icons/fa'
+import { FaTimes, FaDownload } from 'react-icons/fa'
 
 interface ViewMedicineModalProps {
   medicine: Medicine | null
@@ -192,21 +192,6 @@ const ViewMedicineModal: React.FC<ViewMedicineModalProps> = ({ medicine, isOpen,
     return 'N/A'
   }
 
-  const handlePrint = async () => {
-    try {
-      const blob = await pdf(<MedicinePDF medicine={medicine} />).toBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `medicine-${medicine.medCode}-${medicine.name}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Error generating PDF:', error)
-    }
-  }
 
   return (
     <div className="modal modal-open">
@@ -214,13 +199,6 @@ const ViewMedicineModal: React.FC<ViewMedicineModalProps> = ({ medicine, isOpen,
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-lg text-secondary">Medicine Information</h3>
           <div className="flex gap-2">
-            <button
-              onClick={handlePrint}
-              className="btn btn-sm btn-primary"
-            >
-              <FaPrint className="mr-1" />
-              Print PDF
-            </button>
             <PDFDownloadLink
               document={<MedicinePDF medicine={medicine} />}
               fileName={`medicine-${medicine.medCode}-${medicine.name}.pdf`}
@@ -229,7 +207,7 @@ const ViewMedicineModal: React.FC<ViewMedicineModalProps> = ({ medicine, isOpen,
               {({ loading }) => (
                 <>
                   <FaDownload className="mr-1" />
-                  {loading ? 'Generating...' : 'Download PDF'}
+                  {loading ? 'Generating...' : 'Export PDF'}
                 </>
               )}
             </PDFDownloadLink>
