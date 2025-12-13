@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs, query, orderBy, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { BHW } from '@/interface/user'
@@ -21,6 +21,7 @@ const AdminBHW = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [genderFilter, setGenderFilter] = useState<string>('all')
+  const [barangayFilter, setBarangayFilter] = useState<string>('all')
 
   // Helper function to safely format dates
   const formatDate = (date: unknown): string => {
@@ -103,6 +104,17 @@ const AdminBHW = () => {
     }
   }
 
+  // Get unique barangays from BHWs
+  const uniqueBarangays = useMemo(() => {
+    const barangays = new Set<string>()
+    bhws.forEach(bhw => {
+      if (bhw.barangay) {
+        barangays.add(bhw.barangay)
+      }
+    })
+    return Array.from(barangays).sort()
+  }, [bhws])
+
   // Filter and search BHWs
   const filteredBHWs = bhws.filter((bhw) => {
     const matchesSearch = searchTerm === '' || 
@@ -111,8 +123,9 @@ const AdminBHW = () => {
     
     const matchesStatus = statusFilter === 'all' || bhw.status === statusFilter
     const matchesGender = genderFilter === 'all' || bhw.gender === genderFilter
+    const matchesBarangay = barangayFilter === 'all' || bhw.barangay === barangayFilter
     
-    return matchesSearch && matchesStatus && matchesGender
+    return matchesSearch && matchesStatus && matchesGender && matchesBarangay
   })
 
   if (isLoading) {
@@ -141,7 +154,7 @@ const AdminBHW = () => {
       {/* Search and Filter Section */}
       <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search Input */}
             <div className="form-control">
               <label className="label">
@@ -191,6 +204,23 @@ const AdminBHW = () => {
               </select>
             </div>
 
+            {/* Barangay Filter */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold text-xs mb-2">Filter by Barangay</span>
+              </label>
+              <select
+                value={barangayFilter}
+                onChange={(e) => setBarangayFilter(e.target.value)}
+                className="select select-bordered select-sm"
+              >
+                <option value="all">All Barangays</option>
+                {uniqueBarangays.map(barangay => (
+                  <option key={barangay} value={barangay}>{barangay}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Results Count */}
             <div className="form-control">
               <label className="label">
@@ -229,6 +259,7 @@ const AdminBHW = () => {
                       setSearchTerm('')
                       setStatusFilter('all')
                       setGenderFilter('all')
+                      setBarangayFilter('all')
                     }}
                     className="btn btn-outline btn-secondary"
                   >

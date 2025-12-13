@@ -17,7 +17,8 @@ const AddBHW = () => {
     address: '',
     birthDate: new Date().toISOString().split('T')[0],
     gender: 'male',
-    status: 'single'
+    status: 'single',
+    barangay: ''
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -28,6 +29,7 @@ const AddBHW = () => {
     if (!formData.name?.trim()) newErrors.name = 'Name is required'
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.email?.trim()) newErrors.email = 'Email is required'
+    if (!formData.barangay?.trim()) newErrors.barangay = 'Barangay is required'
     
     // Contact number validation (optional but if provided, should be valid)
     if (formData.contactNumber && !/^(\+63|0)?[0-9]{10,11}$/.test(formData.contactNumber.replace(/\s/g, ''))) {
@@ -191,6 +193,39 @@ const AddBHW = () => {
                   <option value="divorced">Divorced</option>
                 </select>
               </div>
+            </div>
+
+            {/* Barangay */}
+            <div className="form-control flex flex-col">
+              <label className="label">
+                <span className="label-text font-semibold text-xs">Barangay *</span>
+              </label>
+              <select
+                name="barangay"
+                value={formData.barangay}
+                onChange={handleInputChange}
+                className={`select select-bordered ${errors.barangay ? 'select-error' : ''}`}
+              >
+                <option value="" disabled>
+                  Select Barangay
+                </option>
+                <option value="Balansay">Balansay</option>
+                <option value="Sta.Fatima">Sta.Fatima</option>
+                <option value="Payompon">Payompon</option>
+                <option value="San Luis">San Luis</option>
+                <option value="Talabaan">Talabaan</option>
+                <option value="Tangkalan">Tangkalan</option>
+                <option value="Tayamaan">Tayamaan</option>
+                <option value="Brgy 1">Brgy 1</option>
+                <option value="Brgy 2">Brgy 2</option>
+                <option value="Brgy 3">Brgy 3</option>
+                <option value="Brgy 4">Brgy 4</option>
+                <option value="Brgy 5">Brgy 5</option>
+                <option value="Brgy 6">Brgy 6</option>
+                <option value="Brgy 7">Brgy 7</option>
+                <option value="Brgy 8">Brgy 8</option>
+              </select>
+              {errors.barangay && <span className="label-text-alt text-error">{errors.barangay}</span>}
             </div>
 
             {/* Address */}

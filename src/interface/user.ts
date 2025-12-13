@@ -63,4 +63,6 @@ export interface BHW{
     status: 'single' | 'married' | 'widowed' | 'separated' | 'divorced';
     createdAt?: Date | { toDate: () => Date };
     profilePicture?: string; // URL of the profile picture in Firebase Storage
+    bhwProfilingTool?: string; //URL of the bhw profiling tool in Firebase Storage
+    barangay?: string; //Barangay of the BHW
 }
