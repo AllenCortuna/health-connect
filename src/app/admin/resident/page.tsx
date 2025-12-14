@@ -215,37 +215,47 @@ const Resident = () => {
                   <tr>
                     <th>Name</th>
                     <th>Family Number</th>
+                    <th>Household Head</th>
                     <th>Gender</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredResidents.map((resident) => (
-                    <tr key={resident.id} className="hover text-xs font-medium text-zinc-500" >
-                      <td>
-                        <div className="font-medium">
-                          {resident.fullName}
-                        </div>
-                      </td>
-                      <td>
-                          {resident.familyNo}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          <span className="capitalize">{resident.gender}</span>
-                        </div>
-                      </td>
-                      <td className="flex items-center gap-2">
-                        <button
-                          onClick={() => openModal(resident)}
-                          className="btn btn-outline btn-secondary btn-xs"
-                          title="View Details"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredResidents.map((resident) => {
+                    const householdHeadName = resident.householdId 
+                      ? householdHeadMap.get(resident.householdId) || 'N/A'
+                      : 'N/A'
+                    
+                    return (
+                      <tr key={resident.id} className="hover text-xs font-medium text-zinc-500" >
+                        <td>
+                          <div className="font-medium">
+                            {resident.fullName}
+                          </div>
+                        </td>
+                        <td>
+                            {resident.familyNo}
+                        </td>
+                        <td>
+                          {householdHeadName}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <span className="capitalize">{resident.gender}</span>
+                          </div>
+                        </td>
+                        <td className="flex items-center gap-2">
+                          <button
+                            onClick={() => openModal(resident)}
+                            className="btn btn-outline btn-secondary btn-xs"
+                            title="View Details"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
