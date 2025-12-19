@@ -37,10 +37,6 @@ const Messages = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  useEffect(() => {
-    fetchMessages()
-  }, [])
-
   // Update selected conversation when messages change
   useEffect(() => {
     if (selectedConversation && conversations.length > 0) {
@@ -73,8 +69,15 @@ const Messages = () => {
         
         messagesData.push(message)
       })
-      
-      setMessages(messagesData)
+
+      // If we have a logged-in BHW, keep only messages where they are sender or receiver
+      const filteredMessages = account?.id
+        ? messagesData.filter(
+            msg => msg.senderId === account.id || msg.receiverId === account.id
+          )
+        : messagesData
+
+      setMessages(filteredMessages)
     } catch (error) {
       console.error('Error fetching messages:', error)
     } finally {

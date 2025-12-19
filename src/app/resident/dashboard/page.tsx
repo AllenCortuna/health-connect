@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAccountStore } from '@/store/accountStore'
 import { useResidentDashboard } from '@/hooks/useResidentDashboard'
-import { useRouter } from 'next/navigation'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
@@ -13,7 +12,6 @@ import {
   HiUser, 
   HiHeart,
 } from 'react-icons/hi'
-import { HiChatBubbleBottomCenterText } from 'react-icons/hi2'
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 
 function MonthCalendar({ 
@@ -179,14 +177,11 @@ function MonthCalendar({
 
 const Dashboard = () => {
   const { account } = useAccountStore()
-  const router = useRouter()
   const {
-    recentMessages,
     upcomingAnnouncements,
     residentData,
     healthInfo,
     isLoading,
-    formatDate,
   } = useResidentDashboard()
   
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -292,14 +287,6 @@ const Dashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="stat bg-primary text-primary-content rounded-lg">
-          <div className="stat-figure text-primary-content">
-            <HiChatBubbleBottomCenterText className="w-8 h-8" />
-          </div>
-          <div className="stat-title text-primary-content">Messages</div>
-          <div className="stat-value text-primary-content">{recentMessages.length}</div>
-          <div className="stat-desc text-primary-content">Recent Messages</div>
-        </div>
 
         <div className="stat bg-secondary text-secondary-content rounded-lg">
           <div className="stat-figure text-secondary-content">
@@ -332,59 +319,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Messages */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="card-title text-lg font-bold text-secondary">
-                <HiChatBubbleBottomCenterText className="w-8 h-8" />
-                Recent Messages
-              </h2>
-            </div>
-            
-            {recentMessages.length === 0 ? (
-              <div className="text-center py-8">
-                <HiChatBubbleBottomCenterText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-xs">No recent messages</p>
-                <button 
-                  onClick={() => router.push('/resident/message/create')}
-                  className="btn btn-primary btn-sm mt-2"
-                >
-                  Send First Message
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentMessages.map((message) => (
-                  <div 
-                    key={message.id}
-                    className="p-3 bg-base-200 rounded-lg cursor-pointer hover:bg-base-300 transition-colors"
-                    onClick={() => router.push('/resident/message')}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">
-                          {message.senderName}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {message.message}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-2">
-                        {message.status === 'unread' && (
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        )}
-                        <span className="text-xs text-gray-400">
-                          {formatDate(message.createdAt)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Calendar */}
         <div className="lg:col-span-2">

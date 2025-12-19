@@ -93,7 +93,8 @@ function ConversationModal({
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!replyMessage.trim() || !account || !conversation) {
+    // Allow sending when there is either a message or an attachment
+    if ((!replyMessage.trim() && !attachment) || !account || !conversation) {
       return
     }
 
@@ -110,7 +111,8 @@ function ConversationModal({
 
       // Create message object
       const messageData: Omit<Message, 'id'> = {
-        message: replyMessage.trim(),
+        // Allow empty message when sending only an attachment
+        message: replyMessage.trim() || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         senderName: account.name || account.email,
@@ -220,7 +222,6 @@ function ConversationModal({
                 value={replyMessage}
                 onChange={(e) => setReplyMessage(e.target.value)}
                 rows={3}
-                required
               />
             </div>
 
@@ -299,7 +300,8 @@ function ConversationModal({
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm"
-                  disabled={!replyMessage.trim() || isSending || isUploading}
+                  // Disable when there's neither text nor attachment, or while sending/uploading
+                  disabled={(!replyMessage.trim() && !attachment) || isSending || isUploading}
                 >
                   {isSending ? (
                     <>

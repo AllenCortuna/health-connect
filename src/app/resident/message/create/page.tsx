@@ -354,12 +354,15 @@ const CreateMessage = () => {
               
               {!attachment ? (
                 <div className="flex items-center gap-4">
-                  <input
-                    type="file"
-                    onChange={handleAttachmentChange}
-                    className="file-input file-input-bordered w-full max-w-xs"
-                    accept="image/*,.pdf,.doc,.docx,.txt"
-                  />
+                  <label className="btn btn-ghost btn-sm cursor-pointer">
+                    <HiPaperClip className="w-4 h-4 mr-2" />
+                    <input
+                      type="file"
+                      onChange={handleAttachmentChange}
+                      className="hidden"
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                    />
+                  </label>
                   <div className="text-sm text-gray-500">
                     Supported: Images, PDF, DOC, TXT
                   </div>

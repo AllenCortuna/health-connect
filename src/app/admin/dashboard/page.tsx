@@ -253,11 +253,11 @@ export default function AdminDashboardPage() {
       {/* Top stats */}
       <div className="flex flex-wrap flex-row gap-4 mb-6">
         <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
-        <StatCard label="Adults" value={stats.normalResidents} color="success" />
-        <StatCard label="Pregnants" value={stats.pregnantResidents} color="accent" />
-        <StatCard label="PWD's" value={stats.pwdResidents} color="info" />
-        <StatCard label="Seniors" value={stats.seniorResidents} color="error" />
-        <StatCard label="Childs" value={stats.childResidents} color="success" />
+        <StatCard label="Adult/s" value={stats.normalResidents} color="success" />
+        <StatCard label="Pregnant/s`" value={stats.pregnantResidents} color="accent" />
+        <StatCard label="PWD/s" value={stats.pwdResidents} color="info" />
+        <StatCard label="Senior/s" value={stats.seniorResidents} color="error" />
+        <StatCard label="Child/s" value={stats.childResidents} color="success" />
       </div>
 
       {/* Quick status + Calendar */}
@@ -275,7 +275,7 @@ export default function AdminDashboardPage() {
                 <div className="ml-auto text-xl font-bold text-secondary">{stats.upcomingEvents}</div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="font-bold text-xs text-zinc-500">Reports Submitted</div>
+                <div className="font-bold text-xs text-zinc-500">Report/s Submitted</div>
                 <div className="ml-auto text-xl font-bold text-secondary">{stats.reportsSubmitted}</div>
               </div>
             </div>
