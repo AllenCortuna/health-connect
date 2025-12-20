@@ -1,0 +1,17 @@
+export const barangay = [
+    "Balansay",
+    "Fatima",
+    "Payompon",
+    "San Luis",
+    "Talabaan",
+    "Tangkalan",
+    "Tayamaan",
+    "Brgy 1",
+    "Brgy 2",
+    "Brgy 3",
+    "Brgy 4",
+    "Brgy 5",
+    "Brgy 6",
+    "Brgy 7",
+    "Brgy 8",
+]

@@ -24,7 +24,7 @@ const Settings = () => {
               </label>
               <input
                 type="text"
-                value={`${account?.firstName || ''} ${account?.middleName?.charAt(0) || ''}. ${account?.lastName || ''} ${account?.suffix || ''}`}
+                value={account?.headOfHousehold || ''}
                 className="input input-bordered text-xs"
                 disabled
               />
@@ -48,7 +48,7 @@ const Settings = () => {
               </label>
               <input
                 type="tel"
-                value={account?.contactNumber || ''}
+                value={account?.headOfHouseholdContactNumber || 'N/A'}
                 className="input input-bordered text-xs"
                 disabled
               />

@@ -8,6 +8,7 @@ export interface Medicine {
     medType: 'tablet' | 'capsule' | 'syrup' | 'inhaler' | 'ointment' | 'injection' | 'drops';
     category: string;
     supplier: string;
+    barangay?: string; //barangay kung saan na release ang medicine
     status: 'available' | 'out of stock';
     createdAt: Date;
     updatedAt: Date;

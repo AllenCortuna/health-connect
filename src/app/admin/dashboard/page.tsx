@@ -254,7 +254,7 @@ export default function AdminDashboardPage() {
       <div className="flex flex-wrap flex-row gap-4 mb-6">
         <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
         <StatCard label="Adult/s" value={stats.normalResidents} color="success" />
-        <StatCard label="Pregnant/s`" value={stats.pregnantResidents} color="accent" />
+        <StatCard label="Pregnant/s" value={stats.pregnantResidents} color="accent" />
         <StatCard label="PWD/s" value={stats.pwdResidents} color="info" />
         <StatCard label="Senior/s" value={stats.seniorResidents} color="error" />
         <StatCard label="Child/s" value={stats.childResidents} color="success" />

@@ -18,6 +18,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { href: "/bhw/resident", icon: HiUserGroup, label: "Residents"},
     { href: "/bhw/medicine", icon: HiBeaker, label: "Track Medicines"},
     { 
+      href: "/bhw/medicine/released", 
+      icon: HiBeaker, 
+      label: "Released Medicines"
+    },
+    { 
       href: "/bhw/message", 
       icon: HiChatBubbleLeftRight, 
       label: "Messages",

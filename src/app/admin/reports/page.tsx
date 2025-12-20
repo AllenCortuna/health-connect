@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Report } from '@/interface/report'
 import type { BHW } from '@/interface/user'
 import { format, parseISO, startOfWeek } from 'date-fns'
 import { HiCalendar, HiUser, HiDocumentText, HiChevronDown, HiChevronUp } from 'react-icons/hi'
+import { barangay } from '@/constant/barangay'
 
 function getWeekEnd(weekStart: Date): Date {
   const weekEnd = new Date(weekStart)
@@ -19,10 +20,12 @@ export default function AdminReportsPage() {
   const [bhws, setBhws] = useState<BHW[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [expandedReportId, setExpandedReportId] = useState<string | null>(null)
+  const [expandedBhwGroups, setExpandedBhwGroups] = useState<Set<string>>(new Set())
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [bhwFilter, setBhwFilter] = useState<string>('all')
+  const [barangayFilter, setBarangayFilter] = useState<string>('all')
   const [dateFilter, setDateFilter] = useState<string>('all') // 'all', 'this-week', 'this-month', 'last-month'
   
   useEffect(() => {
@@ -90,7 +93,30 @@ export default function AdminReportsPage() {
   const toggleExpand = (reportId: string) => {
     setExpandedReportId(expandedReportId === reportId ? null : reportId)
   }
+
+  const toggleBhwGroup = (bhwId: string) => {
+    setExpandedBhwGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(bhwId)) {
+        newSet.delete(bhwId)
+      } else {
+        newSet.add(bhwId)
+      }
+      return newSet
+    })
+  }
   
+  // Create a map of BHW ID to barangay for quick lookup
+  const bhwBarangayMap = useMemo(() => {
+    const map = new Map<string, string>()
+    bhws.forEach(bhw => {
+      if (bhw.id && bhw.barangay) {
+        map.set(bhw.id, bhw.barangay)
+      }
+    })
+    return map
+  }, [bhws])
+
   // Filter reports
   const filteredReports = reports.filter((report) => {
     // Search filter
@@ -100,6 +126,9 @@ export default function AdminReportsPage() {
     
     // BHW filter
     const matchesBHW = bhwFilter === 'all' || report.bhwId === bhwFilter
+    
+    // Barangay filter
+    const matchesBarangay = barangayFilter === 'all' || bhwBarangayMap.get(report.bhwId) === barangayFilter
     
     // Date filter
     let matchesDate = true
@@ -120,8 +149,46 @@ export default function AdminReportsPage() {
       }
     }
     
-    return matchesSearch && matchesBHW && matchesDate
+    return matchesSearch && matchesBHW && matchesBarangay && matchesDate
   })
+
+  // Group reports by BHW
+  interface GroupedReport {
+    bhwId: string
+    bhwName: string
+    reports: Report[]
+  }
+
+  const groupedReports = useMemo(() => {
+    return filteredReports.reduce((acc, report) => {
+      const existingGroup = acc.find(g => g.bhwId === report.bhwId)
+      if (existingGroup) {
+        existingGroup.reports.push(report)
+      } else {
+        acc.push({
+          bhwId: report.bhwId,
+          bhwName: report.bhwName,
+          reports: [report]
+        })
+      }
+      return acc
+    }, [] as GroupedReport[])
+  }, [filteredReports])
+
+  // Auto-expand groups with only one report
+  useEffect(() => {
+    if (groupedReports.length > 0) {
+      const singleReportGroups = groupedReports
+        .filter(g => g.reports.length === 1)
+        .map(g => g.bhwId)
+      
+      setExpandedBhwGroups(prev => {
+        const newSet = new Set(prev)
+        singleReportGroups.forEach(id => newSet.add(id))
+        return newSet
+      })
+    }
+  }, [groupedReports])
   
   if (isLoading) {
     return (
@@ -143,7 +210,7 @@ export default function AdminReportsPage() {
       {/* Search and Filter Section */}
       <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search Input */}
             <div className="form-control">
               <label className="label">
@@ -172,6 +239,25 @@ export default function AdminReportsPage() {
                 {bhws.map((bhw) => (
                   <option key={bhw.id} value={bhw.id}>
                     {bhw.name || bhw.email || 'Unknown'}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Barangay Filter */}
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text font-semibold text-xs mb-2">Filter by Barangay</span>
+              </label>
+              <select
+                value={barangayFilter}
+                onChange={(e) => setBarangayFilter(e.target.value)}
+                className="select select-bordered select-sm"
+              >
+                <option value="all">All Barangays</option>
+                {barangay.map((brgy) => (
+                  <option key={brgy} value={brgy}>
+                    {brgy}
                   </option>
                 ))}
               </select>
@@ -206,7 +292,7 @@ export default function AdminReportsPage() {
 
       {/* Reports List */}
       <div className="space-y-4">
-        {filteredReports.length === 0 ? (
+        {groupedReports.length === 0 ? (
           <div className="card bg-base-100 shadow-lg">
             <div className="card-body">
               <div className="text-center py-8">
@@ -222,6 +308,7 @@ export default function AdminReportsPage() {
                       onClick={() => {
                         setSearchTerm('')
                         setBhwFilter('all')
+                        setBarangayFilter('all')
                         setDateFilter('all')
                       }}
                       className="btn btn-outline btn-secondary"
@@ -234,90 +321,134 @@ export default function AdminReportsPage() {
             </div>
           </div>
         ) : (
-          filteredReports.map((report) => {
-            const isExpanded = expandedReportId === report.id
-            const weekStart = report.weekStart ? parseISO(report.weekStart) : null
-            const weekEnd = weekStart ? getWeekEnd(weekStart) : null
+          groupedReports.map((group) => {
+            const isGroupExpanded = expandedBhwGroups.has(group.bhwId)
+            const totalTasks = group.reports.reduce((sum, r) => sum + r.taskList.length, 0)
             
             return (
-              <div key={report.id} className="card bg-base-100 shadow-lg">
-                <div className="card-body">
-                  {/* Report Header */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+              <div key={group.bhwId} className="space-y-2">
+                {/* BHW Group Header */}
+                <div 
+                  className="card bg-base-200 shadow-lg cursor-pointer hover:bg-base-300 transition-colors"
+                  onClick={() => toggleBhwGroup(group.bhwId)}
+                >
+                  <div className="card-body py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {isGroupExpanded ? (
+                          <HiChevronUp className="w-5 h-5 text-secondary" />
+                        ) : (
+                          <HiChevronDown className="w-5 h-5 text-secondary" />
+                        )}
                         <HiUser className="w-5 h-5 text-secondary" />
                         <h3 className="text-lg font-semibold text-secondary">
-                          {report.bhwName}
+                          {group.bhwName}
                         </h3>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <HiCalendar className="w-4 h-4" />
-                          <span>
-                            {weekStart && weekEnd 
-                              ? `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
-                              : report.weekStart || 'N/A'}
+                        {group.reports.length > 1 && (
+                          <span className="badge badge-sm badge-secondary">
+                            {group.reports.length} report{group.reports.length !== 1 ? 's' : ''}
                           </span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <HiDocumentText className="w-4 h-4" />
-                          <span>{report.taskList.length} task{report.taskList.length !== 1 ? 's' : ''} completed</span>
-                        </div>
-                        
-                        <div className="text-xs">
-                          Created: {formatDate(report.createdAt)}
-                        </div>
-                      </div>
-                      
-                      {report.remarks && (
-                        <div className="mt-3 p-3 bg-base-200 rounded-lg">
-                          <p className="text-sm text-gray-700">
-                            <span className="font-semibold">Remarks:</span> {report.remarks}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <button
-                      onClick={() => toggleExpand(report.id)}
-                      className="btn btn-ghost btn-sm btn-circle"
-                      title={isExpanded ? 'Collapse' : 'Expand'}
-                    >
-                      {isExpanded ? (
-                        <HiChevronUp className="w-5 h-5" />
-                      ) : (
-                        <HiChevronDown className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-base-300">
-                      <h4 className="font-semibold text-secondary mb-3">Completed Tasks:</h4>
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {report.taskList.length > 0 ? (
-                          report.taskList.map((task, index) => (
-                            <div key={index} className="flex items-start gap-2 p-2 bg-base-200 rounded">
-                              <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                              <span className="text-sm text-gray-700">{task}</span>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-sm text-gray-500">No tasks listed</p>
                         )}
                       </div>
-                      
-                      <div className="mt-4 pt-4 border-t border-base-300 text-xs text-gray-500">
-                        <div>Report ID: {report.id}</div>
-                        <div>Last updated: {formatDate(report.updatedAt)}</div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <HiDocumentText className="w-4 h-4" />
+                          <span>{totalTasks} total task{totalTasks !== 1 ? 's' : ''}</span>
+                        </div>
+                        <span className="text-xs text-gray-500">Click to {isGroupExpanded ? 'collapse' : 'expand'}</span>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
+                
+                {/* Expanded Reports */}
+                {isGroupExpanded && (
+                  <div className="space-y-3 ml-6">
+                    {group.reports.map((report) => {
+                      const isExpanded = expandedReportId === report.id
+                      const weekStart = report.weekStart ? parseISO(report.weekStart) : null
+                      const weekEnd = weekStart ? getWeekEnd(weekStart) : null
+                      
+                      return (
+                        <div key={report.id} className="card bg-base-100 shadow-lg">
+                          <div className="card-body">
+                            {/* Report Header */}
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <HiCalendar className="w-4 h-4" />
+                                    <span>
+                                      {weekStart && weekEnd 
+                                        ? `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
+                                        : report.weekStart || 'N/A'}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2">
+                                    <HiDocumentText className="w-4 h-4" />
+                                    <span>{report.taskList.length} task{report.taskList.length !== 1 ? 's' : ''} completed</span>
+                                  </div>
+                                  
+                                  <div className="text-xs">
+                                    Created: {formatDate(report.createdAt)}
+                                  </div>
+                                </div>
+                                
+                                {report.remarks && (
+                                  <div className="mt-2 p-3 bg-base-200 rounded-lg">
+                                    <p className="text-sm text-gray-700">
+                                      <span className="font-semibold">Remarks:</span> {report.remarks}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleExpand(report.id)
+                                }}
+                                className="btn btn-ghost btn-sm btn-circle"
+                                title={isExpanded ? 'Collapse' : 'Expand'}
+                              >
+                                {isExpanded ? (
+                                  <HiChevronUp className="w-5 h-5" />
+                                ) : (
+                                  <HiChevronDown className="w-5 h-5" />
+                                )}
+                              </button>
+                            </div>
+                            
+                            {/* Expanded Details */}
+                            {isExpanded && (
+                              <div className="mt-4 pt-4 border-t border-base-300">
+                                <h4 className="font-semibold text-secondary mb-3">Completed Tasks:</h4>
+                                <div className="space-y-2 max-h-96 overflow-y-auto">
+                                  {report.taskList.length > 0 ? (
+                                    report.taskList.map((task, index) => (
+                                      <div key={index} className="flex items-start gap-2 p-2 bg-base-200 rounded">
+                                        <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                                        <span className="text-sm text-gray-700">{task}</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="text-sm text-gray-500">No tasks listed</p>
+                                  )}
+                                </div>
+                                
+                                <div className="mt-4 pt-4 border-t border-base-300 text-xs text-gray-500">
+                                  <div>Report ID: {report.id}</div>
+                                  <div>Last updated: {formatDate(report.updatedAt)}</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )
           })

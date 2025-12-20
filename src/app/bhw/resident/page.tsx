@@ -137,6 +137,10 @@ const Resident = () => {
                 </span>
               </div>
             </div>
+            <Link href="/bhw/resident/add" className="btn btn-secondary btn-sm">
+              <FaPlus className="mr-2" />
+              Add Resident
+            </Link>
           </div>
         </div>
       </div>

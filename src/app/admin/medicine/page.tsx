@@ -1,14 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore'
+import React, { useState, useEffect, useMemo } from 'react'
+import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
-import { FaPlus } from 'react-icons/fa'
+import { FaPlus, FaChevronDown, FaChevronRight } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
 import ReleaseMedicineModal from '@/components/admin/ReleaseMedicineModal'
+import ConfirmDeleteMedicineModal from '@/components/bhw/ConfirmDeleteMedicineModal'
 import { successToast, errorToast } from '@/lib/toast'
 
 const Medicine = () => {
@@ -20,9 +21,13 @@ const Medicine = () => {
   const [medicineToRelease, setMedicineToRelease] = useState<Medicine | null>(null)
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false)
   const [isReleasing, setIsReleasing] = useState(false)
+  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchMedicines()
@@ -84,7 +89,49 @@ const Medicine = () => {
     setMedicineToRelease(null)
   }
 
-  const handleReleaseMedicine = async (amount: number, date: Date, remarks: string) => {
+  const openDeleteModal = (medicine: Medicine) => {
+    setMedicineToDelete(medicine)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false)
+    setMedicineToDelete(null)
+  }
+
+  const isExpired = (medicine: Medicine): boolean => {
+    if (!(medicine.expDate instanceof Date)) return false
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const expDate = new Date(medicine.expDate)
+    expDate.setHours(0, 0, 0, 0)
+    return expDate <= today
+  }
+
+  const canDelete = (medicine: Medicine): boolean => {
+    return isExpired(medicine) || medicine.quantity === 0 || medicine.status === 'out of stock'
+  }
+
+  const handleDeleteMedicine = async () => {
+    if (!medicineToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const medicineRef = doc(db, 'medicine', medicineToDelete.id)
+      await deleteDoc(medicineRef)
+      
+      successToast('Medicine deleted successfully!')
+      closeDeleteModal()
+      fetchMedicines() // Refresh the list
+    } catch (error) {
+      console.error('Error deleting medicine:', error)
+      errorToast('Failed to delete medicine. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleReleaseMedicine = async (amount: number, date: Date, remarks: string, barangay: string) => {
     if (!medicineToRelease) return
 
     setIsReleasing(true)
@@ -130,7 +177,8 @@ const Medicine = () => {
         remarks: remarks || '',
         previousQuantity: medicineToRelease.quantity,
         newQuantity: newQuantity,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        barangay: barangay,
       })
 
       successToast('Medicine released successfully!')
@@ -156,6 +204,56 @@ const Medicine = () => {
     
     return matchesSearch && matchesStatus && matchesType
   })
+
+  // Group medicines by medCode
+  interface GroupedMedicine {
+    medCode: string
+    name: string
+    medicines: Medicine[]
+  }
+
+  const groupedMedicines = useMemo(() => {
+    return filteredMedicines.reduce((acc, medicine) => {
+      const existingGroup = acc.find(g => g.medCode === medicine.medCode)
+      if (existingGroup) {
+        existingGroup.medicines.push(medicine)
+      } else {
+        acc.push({
+          medCode: medicine.medCode,
+          name: medicine.name,
+          medicines: [medicine]
+        })
+      }
+      return acc
+    }, [] as GroupedMedicine[])
+  }, [filteredMedicines])
+
+  const toggleGroup = (medCode: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(medCode)) {
+        newSet.delete(medCode)
+      } else {
+        newSet.add(medCode)
+      }
+      return newSet
+    })
+  }
+
+  // Auto-expand groups with only one medicine
+  useEffect(() => {
+    if (groupedMedicines.length > 0) {
+      const singleItemGroups = groupedMedicines
+        .filter(g => g.medicines.length === 1)
+        .map(g => g.medCode)
+      
+      setExpandedGroups(prev => {
+        const newSet = new Set(prev)
+        singleItemGroups.forEach(code => newSet.add(code))
+        return newSet
+      })
+    }
+  }, [groupedMedicines])
 
   if (isLoading) {
     return (
@@ -290,58 +388,131 @@ const Medicine = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMedicines.map((medicine) => (
-                    <tr key={medicine.id} className="hover text-xs font-medium text-zinc-500">
-                      <td>
-                        <div className="font-medium">
-                          {medicine.medCode}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="font-medium">
-                          {medicine.name}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate max-w-xs">
-                          {medicine.description}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="capitalize badge badge-outline badge-sm">
-                          {medicine.medType}
-                        </span>
-                      </td>
-                      <td>
-                        <StatusBadge status={medicine.status} size="xs" />
-                      </td>
-                      <td>
-                        <span className={`font-medium ${medicine.quantity <= 10 ? 'text-error' : medicine.quantity <= 50 ? 'text-warning' : 'text-success'}`}>
-                          {medicine.quantity}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`font-medium ${medicine.expDate instanceof Date && medicine.expDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-error' : ''}`}>
-                          {medicine.expDate instanceof Date ? medicine.expDate.toLocaleDateString() : 'N/A'}
-                        </span>
-                      </td>
-                      <td className="flex items-center gap-2">
-                        <button
-                          onClick={() => openModal(medicine)}
-                          className="btn btn-outline btn-secondary btn-xs"
-                          title="View Details"
+                  {groupedMedicines.map((group) => {
+                    const isExpanded = expandedGroups.has(group.medCode)
+                    
+                    return (
+                      <React.Fragment key={group.medCode}>
+                        {/* Group Header Row */}
+                        <tr 
+                          className="hover text-xs font-medium bg-base-200 cursor-pointer"
+                          onClick={() => toggleGroup(group.medCode)}
                         >
-                          View
-                        </button>
-                        <button
-                          onClick={() => openReleaseModal(medicine)}
-                          className="btn btn-outline btn-primary btn-xs"
-                          title="Release Medicine"
-                          disabled={medicine.quantity === 0 || (medicine.expDate instanceof Date && medicine.expDate <= new Date())}
-                        >
-                          Release
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          <td>
+                            <div className="flex items-center gap-2">
+                              {isExpanded ? (
+                                <FaChevronDown className="text-secondary" />
+                              ) : (
+                                <FaChevronRight className="text-secondary" />
+                              )}
+                              <div className="font-medium">
+                                {group.medCode}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="font-medium">
+                              {group.name}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="capitalize badge badge-outline badge-sm">
+                              {group.medicines[0].medType}
+                            </span>
+                          </td>
+                          <td>
+                          </td>
+                          <td>
+                              {group.medicines.length > 1 && (
+                                <span className="badge badge-sm badge-secondary">
+                                  {group.medicines.length} item/s
+                                </span>
+                              )}
+                          </td>
+                          <td>
+                          </td>
+                          <td>
+                            <span className="text-gray-400 text-xs">
+                              Click to expand
+                            </span>
+                          </td>
+                        </tr>
+                        
+                        {/* Expanded Medicine Rows */}
+                        {isExpanded && group.medicines.map((medicine) => (
+                          <tr key={medicine.id} className="hover text-xs font-medium text-zinc-500">
+                            <td>
+                              <div className="pl-6 font-medium">
+                                {medicine.medCode}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="font-medium">
+                                {medicine.name}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate max-w-xs">
+                                {medicine.description}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="capitalize badge badge-outline badge-sm">
+                                {medicine.medType}
+                              </span>
+                            </td>
+                            <td>
+                              <StatusBadge status={medicine.status} size="xs" />
+                            </td>
+                            <td>
+                              <span className={`font-medium ${medicine.quantity <= 10 ? 'text-error' : medicine.quantity <= 50 ? 'text-warning' : 'text-success'}`}>
+                                {medicine.quantity}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`font-medium ${medicine.expDate instanceof Date && medicine.expDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-error' : ''}`}>
+                                {medicine.expDate instanceof Date ? medicine.expDate.toLocaleDateString() : 'N/A'}
+                              </span>
+                            </td>
+                            <td className="flex items-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  openModal(medicine)
+                                }}
+                                className="btn btn-outline btn-secondary btn-xs"
+                                title="View Details"
+                              >
+                                View
+                              </button>
+                              {canDelete(medicine) ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openDeleteModal(medicine)
+                                  }}
+                                  className="btn btn-outline btn-error btn-xs"
+                                  title={isExpired(medicine) ? "Delete Expired Medicine" : "Delete Out of Stock Medicine"}
+                                >
+                                  Delete
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openReleaseModal(medicine)
+                                  }}
+                                  className="btn btn-outline btn-primary btn-xs"
+                                  title="Release Medicine"
+                                  disabled={medicine.quantity === 0}
+                                >
+                                  Release
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -363,6 +534,15 @@ const Medicine = () => {
         onClose={closeReleaseModal}
         onRelease={handleReleaseMedicine}
         isReleasing={isReleasing}
+      />
+
+      {/* Delete Medicine Modal */}
+      <ConfirmDeleteMedicineModal
+        medicine={medicineToDelete}
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDeleteMedicine}
+        isDeleting={isDeleting}
       />
     </div>
   )

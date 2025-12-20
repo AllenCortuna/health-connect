@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react'
 import type { Medicine } from '@/interface/data'
 import { FaTimes } from 'react-icons/fa'
+import { barangay } from '@/constant/barangay'
 
 interface ReleaseMedicineModalProps {
   medicine: Medicine | null
   isOpen: boolean
   onClose: () => void
-  onRelease: (amount: number, date: Date, remarks: string) => Promise<void>
+  onRelease: (amount: number, date: Date, remarks: string, barangay: string) => Promise<void>
   isReleasing: boolean
 }
 
@@ -22,6 +23,7 @@ export default function ReleaseMedicineModal({
   const [amount, setAmount] = useState<string>('')
   const [date, setDate] = useState<string>('')
   const [remarks, setRemarks] = useState<string>('')
+  const [selectedBarangay, setSelectedBarangay] = useState<string>('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function ReleaseMedicineModal({
       setDate(today.toISOString().split('T')[0])
       setAmount('')
       setRemarks('')
+      setSelectedBarangay('')
       setErrors({})
     }
   }, [isOpen, medicine])
@@ -60,6 +63,11 @@ export default function ReleaseMedicineModal({
       }
     }
 
+    // Barangay validation
+    if (!selectedBarangay || selectedBarangay.trim() === '') {
+      newErrors.barangay = 'Barangay is required'
+    }
+
     // Check if medicine is expired
     if (medicine?.expDate instanceof Date) {
       const today = new Date()
@@ -82,11 +90,12 @@ export default function ReleaseMedicineModal({
     if (!validateForm() || !medicine) return
 
     const releaseDate = new Date(date)
-    await onRelease(parseFloat(amount), releaseDate, remarks)
+    await onRelease(parseFloat(amount), releaseDate, remarks, selectedBarangay)
     
     // Reset form
     setAmount('')
     setRemarks('')
+    setSelectedBarangay('')
     setDate(new Date().toISOString().split('T')[0])
     setErrors({})
   }
@@ -94,6 +103,7 @@ export default function ReleaseMedicineModal({
   const handleClose = () => {
     setAmount('')
     setRemarks('')
+    setSelectedBarangay('')
     setDate(new Date().toISOString().split('T')[0])
     setErrors({})
     onClose()
@@ -196,6 +206,33 @@ export default function ReleaseMedicineModal({
             />
             {errors.date && (
               <span className="label-text-alt text-error">{errors.date}</span>
+            )}
+          </div>
+
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Barangay *</span>
+            </label>
+            <select
+              value={selectedBarangay}
+              onChange={(e) => {
+                setSelectedBarangay(e.target.value)
+                if (errors.barangay) setErrors(prev => ({ ...prev, barangay: '' }))
+              }}
+              className={`select select-bordered ${errors.barangay ? 'select-error' : ''}`}
+              disabled={isReleasing || isExpired}
+            >
+              <option value="" disabled>
+                Select Barangay
+              </option>
+              {barangay.map((brgy) => (
+                <option key={brgy} value={brgy}>
+                  {brgy}
+                </option>
+              ))}
+            </select>
+            {errors.barangay && (
+              <span className="label-text-alt text-error">{errors.barangay}</span>
             )}
           </div>
 

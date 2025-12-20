@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase'
 import { successToast, errorToast } from '@/lib/toast'
 import { BHW } from '@/interface/user'
 import { useRouter } from 'next/navigation'
+import { barangay } from '@/constant/barangay'
 
 const AddBHW = () => {
   const router = useRouter()
@@ -49,7 +50,7 @@ const AddBHW = () => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'birthDate' ? new Date(value) : value
+      [name]: value
     }))
     
     // Clear error when user starts typing
@@ -209,21 +210,9 @@ const AddBHW = () => {
                 <option value="" disabled>
                   Select Barangay
                 </option>
-                <option value="Balansay">Balansay</option>
-                <option value="Sta.Fatima">Sta.Fatima</option>
-                <option value="Payompon">Payompon</option>
-                <option value="San Luis">San Luis</option>
-                <option value="Talabaan">Talabaan</option>
-                <option value="Tangkalan">Tangkalan</option>
-                <option value="Tayamaan">Tayamaan</option>
-                <option value="Brgy 1">Brgy 1</option>
-                <option value="Brgy 2">Brgy 2</option>
-                <option value="Brgy 3">Brgy 3</option>
-                <option value="Brgy 4">Brgy 4</option>
-                <option value="Brgy 5">Brgy 5</option>
-                <option value="Brgy 6">Brgy 6</option>
-                <option value="Brgy 7">Brgy 7</option>
-                <option value="Brgy 8">Brgy 8</option>
+                {barangay.map(barangay => (
+                  <option key={barangay} value={barangay}>{barangay}</option>
+                ))}
               </select>
               {errors.barangay && <span className="label-text-alt text-error">{errors.barangay}</span>}
             </div>

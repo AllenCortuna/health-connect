@@ -12,6 +12,7 @@ export interface Account {
     contactNumber?: string;
     address?: string;
     headOfHousehold?: string;
+    headOfHouseholdContactNumber?: string;
     profilePicture?: string;
 }
 
