@@ -1,396 +1,161 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, addDoc, updateDoc, doc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import { useAccountStore } from '@/store/accountStore'
-import { startOfWeek, format, subWeeks, addWeeks } from 'date-fns'
-import { HiCalendar, HiCheckCircle, HiXCircle, HiChevronLeft, HiChevronRight, HiPencil, HiPrinter } from 'react-icons/hi'
-import { useRouter } from 'next/navigation'
-import type { Report } from '@/interface/report'
-import type { BHW } from '@/interface/user'
+import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+import { 
+    FaCalendarAlt, 
+    FaArrowRight,
+    FaChevronLeft,
+    FaLayerGroup,
+    FaCalendarWeek
+} from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
-// Task list from bhwTaskList.md
-const BHW_TASKS = [
-  'Monitored blood pressure of senior citizen/ postpartum/ lactating mothers/ pregnant',
-  'Monitored height and weight of malnourished children.',
-  'Monitored height and weight of 4ps members.',
-  'Screened blood pressure of patients.',
-  'Monitored blood pressure.',
-  'Reweighed malnourish children.',
-  'Assisted midwife during monthly immunization.',
-  'Assisted midwife during prenatal check-up.',
-  'Assisted midwife during follow up visits to postpartum/ pregnant women/ lactating mother.',
-  'Assisted midwife during home visits to EPI defaulters.',
-  'Assisted midwife in conducting Pap smear.',
-  'Tracked pregnant women.',
-  'Conducted home visits to postpartum/ lactating mother/ pregnant women.',
-  'Conducted case finding of malnourish children.',
-  'Conducted case finding of TB patients.',
-  'Conducted interview for family planning user.',
-  'Dispensed pills to family planning user.',
-  'Dispensed TB drugs to TB patients.',
-  'Assisted during medical check-up at RHU.',
-  'Encouraged women to do Pap smear.',
-  'Encouraged women to use family planning/ pills/ DMPA/ implant.',
-  'Assisted BNS in Operation Timbang.',
-  'Conducted weighing of children 0-59 months old for Operation Timbang.',
-  'Conducted house to house survey.',
-  'Distributed Vitamin A to children 6-59 months old.',
-  'Distributed deworming tablets to 12-59 months old.',
-  'Assisted RHU staffs in MR-SIA/ SBI.',
-  'Assisted RHU staffs in medical mission.',
-  'Assisted RHU staffs in konsulta sa barangay.',
-  'Assisted midwife/ nurse in immunization of HPV/ Flu vaccine/ Pneumococcal vaccine',
-  'Conducted interview to new senior citizens.',
-  'Visiter/households with sick member and refer them to the health facility.'
-]
-
-function getWeekStart(date: Date = new Date()): Date {
-  // Get Monday of the current week (weekStartsOn: 1 means Monday)
-  return startOfWeek(date, { weekStartsOn: 1 })
+interface MenuItem {
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    description: string;
+    gradientFrom: string;
+    gradientTo: string;
+    bgGradient: string;
 }
 
-function getWeekEnd(weekStart: Date): Date {
-  const weekEnd = new Date(weekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6) // Sunday
-  return weekEnd
-}
+const ReportsPage = () => {
+    const router = useRouter();
+    const [mounted, setMounted] = useState(false);
 
-export default function ReportsPage() {
-  const router = useRouter()
-  const { account } = useAccountStore()
-  const bhwAccount = account?.role === 'bhw' ? (account as unknown as BHW) : undefined
-  
-  const [existingReport, setExistingReport] = useState<Report | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  
-  // Form state
-  const [remarks, setRemarks] = useState('')
-  const [selectedTasks, setSelectedTasks] = useState<string[]>([])
-  
-  // Week selection state - allow selecting past weeks
-  const [selectedWeekStart, setSelectedWeekStart] = useState<Date>(getWeekStart())
-  
-  // Week calculation
-  const weekStart = selectedWeekStart
-  const weekEnd = getWeekEnd(weekStart)
-  const weekStartISO = format(weekStart, 'yyyy-MM-dd')
-  
-  // Navigation functions for week selection
-  const goToPreviousWeek = () => {
-    setSelectedWeekStart(prev => subWeeks(prev, 1))
-  }
-  
-  const goToNextWeek = () => {
-    const nextWeek = addWeeks(selectedWeekStart, 1)
-    const currentWeek = getWeekStart()
-    // Don't allow going to future weeks
-    if (nextWeek <= currentWeek) {
-      setSelectedWeekStart(nextWeek)
-    }
-  }
-  
-  const goToCurrentWeek = () => {
-    setSelectedWeekStart(getWeekStart())
-  }
-  
-  // Check if report exists for current week
-  useEffect(() => {
-    if (!account?.id) return
-    
-    const checkExistingReport = async () => {
-      try {
-        setIsLoading(true)
-        const reportsRef = collection(db, 'reports')
-        const q = query(
-          reportsRef,
-          where('bhwId', '==', account.id),
-          where('weekStart', '==', weekStartISO)
-        )
-        
-        const querySnapshot = await getDocs(q)
-        
-        if (!querySnapshot.empty) {
-          const doc = querySnapshot.docs[0]
-          const reportData = {
-            id: doc.id,
-            ...doc.data()
-          } as Report
-          
-          setExistingReport(reportData)
-          setRemarks(reportData.remarks || '')
-          setSelectedTasks(reportData.taskList || [])
-        } else {
-          setExistingReport(null)
-          setRemarks('')
-          setSelectedTasks([])
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const menuItems: MenuItem[] = [
+        {
+            href: "/bhw/reports/monthly",
+            icon: FaCalendarAlt,
+            label: "Monthly Reports",
+            description: "View monthly reports submitted by Barangay Health Workers",
+            gradientFrom: "from-secondary",
+            gradientTo: "to-secondary/80",
+            bgGradient: "bg-gradient-to-br from-secondary/10 to-secondary/5"  
+        },
+        {
+            href: "/bhw/reports/weekly",
+            icon: FaCalendarWeek,
+            label: "Weekly Reports",
+            description: "View weekly reports submitted by Barangay Health Workers",
+            gradientFrom: "from-secondary",
+            gradientTo: "to-secondary/80",
+            bgGradient: "bg-gradient-to-br from-secondary/10 to-secondary/5"  
         }
-      } catch (error) {
-        console.error('Error checking existing report:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    checkExistingReport()
-  }, [account?.id, weekStartISO])
-  
-  const handleTaskToggle = (task: string) => {
-    setSelectedTasks(prev => {
-      if (prev.includes(task)) {
-        return prev.filter(t => t !== task)
-      } else {
-        return [...prev, task]
-      }
-    })
-  }
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!account || !bhwAccount) return
-    if (selectedTasks.length === 0) {
-      alert('Please select at least one task')
-      return
-    }
-    
-    setIsSaving(true)
-    try {
-      const reportData: Omit<Report, 'id'> = {
-        remarks: remarks.trim() || "",
-        bhwId: account.id,
-        bhwName: bhwAccount.name || account.email || 'Unknown',
-        taskList: selectedTasks,
-        weekStart: weekStartISO,
-        createdAt: existingReport?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-      
-      if (existingReport) {
-        // Update existing report
-        const reportRef = doc(db, 'reports', existingReport.id)
-        await updateDoc(reportRef, reportData)
-      } else {
-        // Create new report
-        const reportsRef = collection(db, 'reports')
-        await addDoc(reportsRef, reportData)
-      }
-      
-      // Refresh the page data
-      const reportsRef = collection(db, 'reports')
-      const q = query(
-        reportsRef,
-        where('bhwId', '==', account.id),
-        where('weekStart', '==', weekStartISO)
-      )
-      const querySnapshot = await getDocs(q)
-      
-      if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0]
-        const updatedReport = {
-          id: doc.id,
-          ...doc.data()
-        } as Report
-        setExistingReport(updatedReport)
-      }
-      
-      alert(existingReport ? 'Report updated successfully!' : 'Report saved successfully!')
-    } catch (error) {
-      console.error('Error saving report:', error)
-      alert('Error saving report. Please try again.')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-  
-  if (isLoading) {
+    ];
+
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex justify-center items-center h-64">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
-      </div>
-    )
-  }
-  
-  return (
-    <div className="container mx-auto pb-20 w-full">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-secondary mb-4">Weekly Reports</h1>
-        
-        {/* Week Selector */}
-        <div className="card bg-base-100 shadow-lg mb-4">
-          <div className="card-body p-4">
-            <div className="flex items-center justify-between gap-4">
-              <button
-                type="button"
-                onClick={goToPreviousWeek}
-                className="btn btn-ghost btn-sm btn-circle"
-                title="Previous week"
-              >
-                <HiChevronLeft className="w-5 h-5" />
-              </button>
-              
-              <div className="flex-1 text-center">
-                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-1">
-                  <HiCalendar className="w-4 h-4" />
-                  <span className="font-semibold">
-                    Week of {format(weekStart, 'MMMM d')} - {format(weekEnd, 'MMMM d, yyyy')}
-                  </span>
+        <div className="min-h-screen bg-gradient-to-br from-base-100 via-base-200/50 to-base-100 p-6 md:p-8">
+            <div className="max-w-7xl mx-auto">
+                {/* Header Section with Animation */}
+                <div 
+                    className={`mb-8 md:mb-12 transition-all duration-700 ${
+                        mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
+                    }`}
+                >
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-lg">
+                            <FaLayerGroup className="text-xl text-white" />
+                        </div>
+                        <h1 className="text-2xl group-hover:text-3xl font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                            Reports Management
+                        </h1>
+                    </div>
+                    <p className="text-xs font-semibold group-hover:text-sm text-zinc-500 max-w-2xl leading-relaxed">
+                        Access comprehensive reports, summaries, and analytics for reports management
+                    </p>
                 </div>
-                {format(weekStart, 'yyyy-MM-dd') !== format(getWeekStart(), 'yyyy-MM-dd') && (
-                  <button
-                    type="button"
-                    onClick={goToCurrentWeek}
-                    className="btn btn-link btn-xs text-primary"
-                  >
-                    Go to current week
-                  </button>
-                )}
-              </div>
-              
-              <button
-                type="button"
-                onClick={goToNextWeek}
-                className="btn btn-ghost btn-sm btn-circle"
-                disabled={format(addWeeks(weekStart, 1), 'yyyy-MM-dd') > format(getWeekStart(), 'yyyy-MM-dd')}
-                title="Next week"
-              >
-                <HiChevronRight className="w-5 h-5" />
-              </button>
+
+                {/* Cards Grid with Staggered Animation */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                    {menuItems.map((item, index) => {
+                        const Icon = item.icon;
+                        const delay = index * 150;
+                        
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`group relative overflow-hidden bg-white shadow-md hover:shadow-2xl transition-all duration-500 border border-zinc-200/50 hover:border-primary/30 ${
+                                    mounted 
+                                        ? 'opacity-100 translate-y-0' 
+                                        : 'opacity-0 translate-y-8'
+                                }`}
+                                style={{
+                                    transitionDelay: `${delay}ms`
+                                }}
+                            >
+                                {/* Gradient Background Overlay */}
+                                <div className={`absolute inset-0 ${item.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                
+                                {/* Content */}
+                                <div className="relative p-6 md:p-8">
+                                    {/* Icon Container with Animation */}
+                                    <div className="mb-6 relative">
+                                        <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} shadow-lg group-hover:scale-110 group-hover:rotate-8 transition-all duration-500`}>
+                                            <Icon className="text-3xl text-white group-hover:scale-110 transition-transform duration-500" />
+                                        </div>
+                                        {/* Decorative Circle */}
+                                        <div className={`absolute -top-2 -right-2 w-16 h-16 rounded-full bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} opacity-20 blur-xl group-hover:opacity-30 group-hover:scale-150 transition-all duration-700`} />
+                                    </div>
+
+                                    {/* Title */}
+                                    <h2 className="text-lg group-hover:text-xl font-bold text-zinc-600 mb-3 group-hover:text-primary transition-all duration-300">
+                                        {item.label}
+                                    </h2>
+
+                                    {/* Description */}
+                                    <p className="text-xs text-zinc-500 mb-6 leading-relaxed line-clamp-3">
+                                        {item.description}
+                                    </p>
+
+                                    {/* Action Button */}
+                                    <div className="flex items-center justify-between pt-4 border-t border-zinc-200 group-hover:border-primary/30 transition-colors duration-300">
+                                        <span className="text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            View Details
+                                        </span>
+                                        <div className={`flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br ${item.gradientFrom} ${item.gradientTo} text-white shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
+                                            <FaArrowRight className="text-sm group-hover:translate-x-1 transition-transform duration-300" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Hover Effect Border */}
+                                <div className={`absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-gradient-to-br ${item.gradientFrom} ${item.gradientTo} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} 
+                                    style={{
+                                        background: `linear-gradient(${item.gradientFrom}, ${item.gradientTo}) padding-box, linear-gradient(${item.gradientFrom}, ${item.gradientTo}) border-box`,
+                                        borderImage: `linear-gradient(135deg, var(--color-primary), var(--color-secondary)) 1`
+                                    }}
+                                />
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* Back Button with Animation */}
+                <div 
+                    className={`mt-8 md:mt-12 transition-all duration-700 ${
+                        mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'
+                    }`}
+                    style={{ transitionDelay: '450ms' }}
+                >
+                    <button
+                        onClick={() => router.back()}
+                        className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-primary bg-white border hover:shadow-lg hover:shadow-primary/50 border-zinc-300 hover:border-primary/50 shadow-sm transition-all duration-300"
+                    >
+                        <FaChevronLeft className="text-xs group-hover:-translate-x-1 transition-transform duration-300" />
+                        <span>Back to Dashboard</span>
+                    </button>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-      
-      {/* Status Alert */}
-      {existingReport && (
-        <div className="alert alert-info mb-6">
-          <HiCheckCircle className="w-5 h-5" />
-          <div className="flex-1 flex items-center justify-between gap-4">
-            <div>
-              <span>You have already submitted a report for this week. You can update it below or </span>
-              <button
-                type="button"
-                onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
-                className="btn btn-link btn-sm p-0 h-auto min-h-0 text-info-content underline"
-              >
-                edit it here
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => router.push(`/bhw/reports/print?id=${existingReport.id}`)}
-              className="btn btn-sm btn-info"
-            >
-              <HiPrinter className="w-4 h-4" />
-              Print
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {!existingReport && (
-        <div className="alert alert-warning mb-6">
-          <HiXCircle className="w-5 h-5" />
-          <span>No report submitted for this week yet. Please fill out the form below.</span>
-        </div>
-      )}
-      
-      {/* Report Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Title and Description */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <div className="form-control flex flex-col gap-1">
-              <label className="label">
-                <span className="label-text font-semibold text-xs">Remarks</span>
-              </label>
-              <textarea
-                className="textarea w-full textarea-bordered h-16 resize-none text-xs"
-                placeholder="Enter report remarks (optional)..."
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-        
-        {/* Task Selection */}
-        <div className="card bg-base-100 shadow-lg">
-          <div className="card-body">
-            <h2 className="card-title font-semibold text-secondary mb-4">
-              Select Tasks Completed <span className="text-error">*</span>
-            </h2>
-            <p className="text-xs text-gray-600 mb-4">
-              Select all tasks you completed during this week. At least one task must be selected.
-            </p>
-            
-            <div className="h-full overflow-y-auto">
-              {BHW_TASKS.map((task, index) => (
-                <label key={index} className="flex items-start gap-2 p-3 rounded-lg hover:bg-base-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="checkbox-xs rounded-none checkbox-primary mt-1"
-                    checked={selectedTasks.includes(task)}
-                    onChange={() => handleTaskToggle(task)}
-                  />
-                  <span className="text-xs text-zinc-600 flex-1">{task}</span>
-                </label>
-              ))}
-            </div>
-            
-            {selectedTasks.length > 0 && (
-              <div className="mt-4 p-3 bg-primary/10 rounded-lg">
-                <p className="text-sm font-semibold text-secondary">
-                  {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Submit Button */}
-        <div className="flex justify-end gap-4">
-          {existingReport && (
-            <>
-              <button
-                type="button"
-                onClick={() => router.push(`/bhw/reports/print?id=${existingReport.id}`)}
-                className="btn btn-outline"
-              >
-                <HiPrinter className="w-4 h-4" />
-                Print Report
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push(`/bhw/reports/edit?id=${existingReport.id}`)}
-                className="btn btn-outline"
-              >
-                <HiPencil className="w-4 h-4" />
-                Edit Report
-              </button>
-            </>
-          )}
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isSaving || selectedTasks.length === 0}
-          >
-            {isSaving ? (
-              <>
-                <span className="loading loading-spinner loading-sm"></span>
-                {existingReport ? 'Updating...' : 'Saving...'}
-              </>
-            ) : (
-              existingReport ? 'Update Report' : 'Save Report'
-            )}
-          </button>
-        </div>
-      </form>
-    </div>
-  )
-}
+    );
+};
+
+export default ReportsPage;

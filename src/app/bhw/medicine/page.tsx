@@ -305,52 +305,52 @@ const Medicine = () => {
                         
                         {/* Expanded Medicine Rows */}
                         {isExpanded && group.medicines.map((medicine) => (
-                          <tr key={medicine.id} className="hover text-xs font-medium text-zinc-500">
-                            <td>
+                    <tr key={medicine.id} className="hover text-xs font-medium text-zinc-500">
+                      <td>
                               <div className="pl-6 font-medium">
-                                {medicine.medCode}
-                              </div>
-                            </td>
-                            <td>
-                              <div className="font-semibold text-zinc-600">
-                                {medicine.name}
-                              </div>
-                              <div className="text-[10px] text-gray-500 truncate max-w-xs">
-                                {medicine.description}
-                              </div>
-                            </td>
-                            <td>
-                              <span className="capitalize badge badge-outline badge-sm">
-                                {medicine.medType}
-                              </span>
-                            </td>
-                            <td>
-                              <StatusBadge status={medicine.status} size="xs" />
-                            </td>
-                            <td>
-                              <span className={`font-medium ${medicine.quantity <= 10 ? 'text-error' : medicine.quantity <= 50 ? 'text-warning' : 'text-success'}`}>
-                                {medicine.quantity}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`font-medium ${medicine.expDate instanceof Date && medicine.expDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-error' : ''}`}>
-                                {medicine.expDate instanceof Date ? medicine.expDate.toLocaleDateString() : 'N/A'}
-                              </span>
-                            </td>
-                            <td className="flex items-center gap-2">
-                              <button
+                          {medicine.medCode}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="font-semibold text-zinc-600">
+                          {medicine.name}
+                        </div>
+                        <div className="text-[10px] text-gray-500 truncate max-w-xs">
+                          {medicine.description}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="capitalize badge badge-outline badge-sm">
+                          {medicine.medType}
+                        </span>
+                      </td>
+                      <td>
+                        <StatusBadge status={medicine.status} size="xs" />
+                      </td>
+                      <td>
+                        <span className={`font-medium ${medicine.quantity <= 10 ? 'text-error' : medicine.quantity <= 50 ? 'text-warning' : 'text-success'}`}>
+                          {medicine.quantity}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`font-medium ${medicine.expDate instanceof Date && medicine.expDate <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-error' : ''}`}>
+                          {medicine.expDate instanceof Date ? medicine.expDate.toLocaleDateString() : 'N/A'}
+                        </span>
+                      </td>
+                      <td className="flex items-center gap-2">
+                        <button
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   openModal(medicine)
                                 }}
-                                className="btn btn-outline btn-secondary btn-xs"
-                                title="View Details"
-                              >
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                          className="btn btn-outline btn-secondary btn-xs"
+                          title="View Details"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                       </React.Fragment>
                     )
                   })}

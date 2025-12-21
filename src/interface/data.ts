@@ -40,3 +40,15 @@ export interface Announcement{
     updatedAt: string;
     important: boolean;
 }
+
+export interface MonthlyReport {
+    id: string;
+    bhwId: string;
+    bhwName: string;
+    reportDate: string;
+    reportType: 'monthly' | 'weekly';
+    contents: [string]; // link to uploaded file in Firebase Storage
+    createdAt: string;
+    updatedAt: string;
+    barangay: string;
+}
