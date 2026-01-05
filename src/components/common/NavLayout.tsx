@@ -161,12 +161,12 @@ const NavLayout: React.FC<NavLayoutProps> = ({ children, primaryNavItems, second
                         <div className="items-center gap-3 md:mr-0 md:ml-auto  flex flex-row-reverse md:flex-row">
                             <div className="text-left md:text-right leading-tight">
                                 <div className="text-sm sm:text-base font-extrabold uppercase">
-                                    {account?.role}
-                                </div>
-                                <div className="text-[10px] sm:text-xs opacity-90">
                                     {account?.role === "bhw" && account?.name}
                                     {account?.role === "admin" && "Admin"}
                                     {account?.role === "household" && account?.headOfHousehold}
+                                </div>
+                                <div className="text-[10px] sm:text-xs opacity-90">
+                                    {account?.role}
                                 </div>
                             </div>
                             {bhwProfilePictureUrl || adminProfilePictureUrl ? (
