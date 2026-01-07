@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Report } from '@/interface/report'
@@ -21,6 +21,7 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [expandedReportId, setExpandedReportId] = useState<string | null>(null)
   const [expandedBhwGroups, setExpandedBhwGroups] = useState<Set<string>>(new Set())
+  const hasInitializedExpansionRef = useRef(false)
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -175,20 +176,32 @@ export default function AdminReportsPage() {
     }, [] as GroupedReport[])
   }, [filteredReports])
 
-  // Auto-expand groups with only one report
+  // Auto-expand groups with only one report (only on initial reports load)
   useEffect(() => {
-    if (groupedReports.length > 0) {
-      const singleReportGroups = groupedReports
-        .filter(g => g.reports.length === 1)
-        .map(g => g.bhwId)
-      
-      setExpandedBhwGroups(prev => {
-        const newSet = new Set(prev)
-        singleReportGroups.forEach(id => newSet.add(id))
-        return newSet
+    if (reports.length > 0 && !isLoading && !hasInitializedExpansionRef.current) {
+      // Group reports by bhwId to find single-report groups
+      const groupsMap = new Map<string, Report[]>()
+      reports.forEach(report => {
+        const existing = groupsMap.get(report.bhwId) || []
+        groupsMap.set(report.bhwId, [...existing, report])
       })
+      
+      const singleReportGroups = Array.from(groupsMap.entries())
+        .filter(([, reps]) => reps.length === 1)
+        .map(([bhwId]) => bhwId)
+      
+      if (singleReportGroups.length > 0) {
+        setExpandedBhwGroups(prev => {
+          const newSet = new Set(prev)
+          singleReportGroups.forEach(id => newSet.add(id))
+          return newSet
+        })
+      }
+      
+      hasInitializedExpansionRef.current = true
     }
-  }, [groupedReports])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reports.length, isLoading])
   
   if (isLoading) {
     return (

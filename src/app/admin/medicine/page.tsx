@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
@@ -28,6 +28,7 @@ const Medicine = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const hasInitializedExpansionRef = useRef(false)
 
   useEffect(() => {
     fetchMedicines()
@@ -240,20 +241,32 @@ const Medicine = () => {
     })
   }
 
-  // Auto-expand groups with only one medicine
+  // Auto-expand groups with only one medicine (only on initial medicines load)
   useEffect(() => {
-    if (groupedMedicines.length > 0) {
-      const singleItemGroups = groupedMedicines
-        .filter(g => g.medicines.length === 1)
-        .map(g => g.medCode)
-      
-      setExpandedGroups(prev => {
-        const newSet = new Set(prev)
-        singleItemGroups.forEach(code => newSet.add(code))
-        return newSet
+    if (medicines.length > 0 && !isLoading && !hasInitializedExpansionRef.current) {
+      // Group medicines by medCode to find single-item groups
+      const groupsMap = new Map<string, Medicine[]>()
+      medicines.forEach(medicine => {
+        const existing = groupsMap.get(medicine.medCode) || []
+        groupsMap.set(medicine.medCode, [...existing, medicine])
       })
+      
+      const singleItemGroups = Array.from(groupsMap.entries())
+        .filter(([, meds]) => meds.length === 1)
+        .map(([code]) => code)
+      
+      if (singleItemGroups.length > 0) {
+        setExpandedGroups(prev => {
+          const newSet = new Set(prev)
+          singleItemGroups.forEach(code => newSet.add(code))
+          return newSet
+        })
+      }
+      
+      hasInitializedExpansionRef.current = true
     }
-  }, [groupedMedicines])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [medicines.length, isLoading])
 
   if (isLoading) {
     return (
@@ -424,7 +437,7 @@ const Medicine = () => {
                           </td>
                           <td>
                               {group.medicines.length > 1 && (
-                                <span className="badge badge-sm badge-secondary">
+                                <span className="badge badge-sm badge-secondary text-xs w-full text-nowrap">
                                   {group.medicines.length} item/s
                                 </span>
                               )}
