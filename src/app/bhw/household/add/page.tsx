@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { successToast, errorToast } from '@/lib/toast'
 import { Household } from '@/interface/user'
@@ -20,11 +20,38 @@ const AddHousehold = () => {
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
 
-  const validateForm = (): boolean => {
+  const checkHouseholdNumberExists = async (householdNumber: string): Promise<boolean> => {
+    if (!householdNumber.trim()) return false
+    
+    try {
+      setIsCheckingDuplicate(true)
+      const householdsRef = collection(db, 'household')
+      const q = query(householdsRef, where('householdNumber', '==', householdNumber.trim()))
+      const querySnapshot = await getDocs(q)
+      return !querySnapshot.empty
+    } catch (error) {
+      console.error('Error checking household number:', error)
+      return false
+    } finally {
+      setIsCheckingDuplicate(false)
+    }
+  }
+
+  const validateForm = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.householdNumber?.trim()) newErrors.householdNumber = 'Household Number is required'
+    if (!formData.householdNumber?.trim()) {
+      newErrors.householdNumber = 'Household Number is required'
+    } else {
+      // Check if household number already exists
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        newErrors.householdNumber = 'Household Number already exists'
+      }
+    }
+    
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.headOfHousehold?.trim()) newErrors.headOfHousehold = 'Head of Household is required'
     if (!formData.headOfHouseholdContactNumber?.trim()) newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
@@ -51,10 +78,35 @@ const AddHousehold = () => {
     }
   }
 
+  const handleHouseholdNumberBlur = async () => {
+    if (formData.householdNumber.trim()) {
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          householdNumber: 'Household Number already exists'
+        }))
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) {
+    // Double-check if household number exists before submitting
+    if (formData.householdNumber.trim()) {
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          householdNumber: 'Household Number already exists'
+        }))
+        errorToast('Household Number already exists. Please use a different number.')
+        return
+      }
+    }
+    
+    if (!(await validateForm())) {
       errorToast('Please fix the errors in the form')
       return
     }
@@ -98,10 +150,17 @@ const AddHousehold = () => {
                   name="householdNumber"
                   value={formData.householdNumber}
                   onChange={handleInputChange}
+                  onBlur={handleHouseholdNumberBlur}
                   className={`input input-bordered ${errors.householdNumber ? 'input-error' : ''}`}
                   placeholder="Enter Household Number"
+                  disabled={isCheckingDuplicate}
                 />
-                {errors.householdNumber && <span className="label-text-alt text-error">{errors.householdNumber}</span>}
+                {isCheckingDuplicate && (
+                  <span className="label-text-alt text-info">Checking availability...</span>
+                )}
+                {errors.householdNumber && !isCheckingDuplicate && (
+                  <span className="label-text-alt text-error">{errors.householdNumber}</span>
+                )}
               </div>
 
               <div className="form-control flex flex-col">
@@ -196,7 +255,7 @@ const AddHousehold = () => {
               <button
                 type="submit"
                 className="btn btn-secondary"
-                disabled={isLoading}
+                disabled={isLoading || isCheckingDuplicate}
               >
                 {isLoading ? (
                   <>

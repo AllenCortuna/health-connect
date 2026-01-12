@@ -16,7 +16,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { href: "/bhw/dashboard", icon: HiHome, label: "Dashboard"},
     { href: "/bhw/household", icon: HiBuildingOffice, label: "Households"},
     { href: "/bhw/resident", icon: HiUserGroup, label: "Residents"},
-    { href: "/bhw/medicine", icon: HiBeaker, label: "Track Medicines"},
     { 
       href: "/bhw/medicine/released", 
       icon: HiBeaker, 
