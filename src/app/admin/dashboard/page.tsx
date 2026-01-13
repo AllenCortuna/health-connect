@@ -323,7 +323,7 @@ export default function AdminDashboardPage() {
         <StatCard label="Infant/s" value={stats.infantResidents} color="info" />
         <StatCard label="Toddler/s" value={stats.toddlerResidents} color="primary" />
         <StatCard label="Child/s" value={stats.childResidents} color="success" />
-        <StatCard label="Adult/s" value={stats.normalResidents} color="success" />
+        <StatCard label="Adult/s" value={stats.adultResidents} color="success" />
         <StatCard label="Senior/s" value={stats.seniorResidents} color="error" />
       </div>
 

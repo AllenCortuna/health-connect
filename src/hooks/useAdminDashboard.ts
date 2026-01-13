@@ -7,9 +7,7 @@ import type { Resident } from '@/interface/user'
 
 export interface AdminDashboardStats {
   totalPopulation: number
-  normalResidents: number
-  pregnantResidents: number
-  pwdResidents: number
+  adultResidents: number
   seniorResidents: number
   childResidents: number
   newbornResidents: number
@@ -37,13 +35,8 @@ function getAgeInMonths(birthDate: Date): number {
 }
 
 // Helper function to get age category
-function getAgeCategory(birthDate: Date | undefined, originalStatus: string): string | null {
+function getAgeCategory(birthDate: Date | undefined): string | null {
   if (!birthDate || !(birthDate instanceof Date)) return null
-  
-  // Don't count pwd or pregnant as age-based categories
-  if (originalStatus === 'pwd' || originalStatus === 'pregnant') {
-    return null
-  }
   
   const months = getAgeInMonths(birthDate)
   const years = Math.floor(months / 12)
@@ -54,9 +47,13 @@ function getAgeCategory(birthDate: Date | undefined, originalStatus: string): st
     return 'infant'
   } else if (years < 4) {
     return 'toddler'
+  } else if (years < 18) {
+    return 'child'
+  } else if (years < 65) {
+    return 'adult'
+  } else {
+    return 'senior'
   }
-  
-  return null
 }
 
 function useAdminDashboard(): AdminDashboardStats {
@@ -90,37 +87,23 @@ function useAdminDashboard(): AdminDashboardStats {
         const reportsCol = collection(db, 'reports')
         const eventsCol = collection(db, 'announcements')
 
-        // Counts
-        const [
-          totalPopulationSnap,
-          pregnantSnap,
-          pwdSnap,
-          seniorSnap,
-          childSnap
-        ] = await Promise.all([
-          getCountFromServer(residentCol),
-          getCountFromServer(query(residentCol, where('status', '==', 'pregnant'))),
-          getCountFromServer(query(residentCol, where('status', '==', 'pwd'))),
-          getCountFromServer(query(residentCol, where('status', '==', 'senior'))),
-          getCountFromServer(query(residentCol, where('status', '==', 'child')))
-        ])
-
+        // Get total population count
+        const totalPopulationSnap = await getCountFromServer(residentCol)
         const totalPopulation = totalPopulationSnap.data().count
-        const pregnantResidents = pregnantSnap.data().count
-        const pwdResidents = pwdSnap.data().count
-        const seniorResidents = seniorSnap.data().count
-        const childResidents = childSnap.data().count
 
         // Fetch all residents to calculate age-based categories
         const allResidentsSnap = await getDocs(residentCol)
         let newbornResidents = 0
         let infantResidents = 0
         let toddlerResidents = 0
+        let childResidents = 0
+        let adultResidents = 0
+        let seniorResidents = 0
 
         allResidentsSnap.forEach(doc => {
           const data = doc.data() as Resident & { birthDate?: FirestoreDateLike }
           const birthDate = normalizeToDate(data.birthDate)
-          const ageCategory = getAgeCategory(birthDate, data.status || '')
+          const ageCategory = getAgeCategory(birthDate)
           
           if (ageCategory === 'newborn') {
             newbornResidents++
@@ -128,14 +111,15 @@ function useAdminDashboard(): AdminDashboardStats {
             infantResidents++
           } else if (ageCategory === 'toddler') {
             toddlerResidents++
+          } else if (ageCategory === 'child') {
+            childResidents++
+          } else if (ageCategory === 'adult') {
+            adultResidents++
+          } else if (ageCategory === 'senior') {
+            seniorResidents++
           }
         })
 
-        // Derive normal residents (best-effort fallback if schema differs)
-        const normalResidents = Math.max(
-          0,
-          totalPopulation - pregnantResidents - pwdResidents - seniorResidents - childResidents
-        )
 
         // Patients served: derive from messages with keyword or a dedicated collection if available
         // Here we approximate using messages where messageType === 'consultation' if present
@@ -188,9 +172,7 @@ function useAdminDashboard(): AdminDashboardStats {
         if (!isActive) return
         setState({
           totalPopulation,
-          normalResidents,
-          pregnantResidents,
-          pwdResidents,
+          adultResidents,
           seniorResidents,
           childResidents,
           newbornResidents,
@@ -206,9 +188,7 @@ function useAdminDashboard(): AdminDashboardStats {
         setHasError(true)
         setState({
           totalPopulation: 0,
-          normalResidents: 0,
-          pregnantResidents: 0,
-          pwdResidents: 0,
+          adultResidents: 0,
           seniorResidents: 0,
           childResidents: 0,
           newbornResidents: 0,
@@ -230,9 +210,7 @@ function useAdminDashboard(): AdminDashboardStats {
 
   return useMemo(() => ({
     totalPopulation: state?.totalPopulation ?? 0,
-    normalResidents: state?.normalResidents ?? 0,
-    pregnantResidents: state?.pregnantResidents ?? 0,
-    pwdResidents: state?.pwdResidents ?? 0,
+    adultResidents: state?.adultResidents ?? 0,
     seniorResidents: state?.seniorResidents ?? 0,
     childResidents: state?.childResidents ?? 0,
     newbornResidents: state?.newbornResidents ?? 0,
