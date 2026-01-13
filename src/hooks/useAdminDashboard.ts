@@ -12,12 +12,51 @@ export interface AdminDashboardStats {
   pwdResidents: number
   seniorResidents: number
   childResidents: number
+  newbornResidents: number
+  infantResidents: number
+  toddlerResidents: number
   patientsServed: number
   upcomingEvents: number
   reportsSubmitted: number
   recentResidents: Resident[]
   isLoading: boolean
   hasError: boolean
+}
+
+// Helper function to calculate age in months
+function getAgeInMonths(birthDate: Date): number {
+  const today = new Date()
+  const years = today.getFullYear() - birthDate.getFullYear()
+  const months = today.getMonth() - birthDate.getMonth()
+  const days = today.getDate() - birthDate.getDate()
+  
+  let totalMonths = years * 12 + months
+  if (days < 0) totalMonths--
+  
+  return Math.max(0, totalMonths)
+}
+
+// Helper function to get age category
+function getAgeCategory(birthDate: Date | undefined, originalStatus: string): string | null {
+  if (!birthDate || !(birthDate instanceof Date)) return null
+  
+  // Don't count pwd or pregnant as age-based categories
+  if (originalStatus === 'pwd' || originalStatus === 'pregnant') {
+    return null
+  }
+  
+  const months = getAgeInMonths(birthDate)
+  const years = Math.floor(months / 12)
+  
+  if (months < 2) {
+    return 'newborn'
+  } else if (months < 12) {
+    return 'infant'
+  } else if (years < 4) {
+    return 'toddler'
+  }
+  
+  return null
 }
 
 function useAdminDashboard(): AdminDashboardStats {
@@ -71,6 +110,26 @@ function useAdminDashboard(): AdminDashboardStats {
         const pwdResidents = pwdSnap.data().count
         const seniorResidents = seniorSnap.data().count
         const childResidents = childSnap.data().count
+
+        // Fetch all residents to calculate age-based categories
+        const allResidentsSnap = await getDocs(residentCol)
+        let newbornResidents = 0
+        let infantResidents = 0
+        let toddlerResidents = 0
+
+        allResidentsSnap.forEach(doc => {
+          const data = doc.data() as Resident & { birthDate?: FirestoreDateLike }
+          const birthDate = normalizeToDate(data.birthDate)
+          const ageCategory = getAgeCategory(birthDate, data.status || '')
+          
+          if (ageCategory === 'newborn') {
+            newbornResidents++
+          } else if (ageCategory === 'infant') {
+            infantResidents++
+          } else if (ageCategory === 'toddler') {
+            toddlerResidents++
+          }
+        })
 
         // Derive normal residents (best-effort fallback if schema differs)
         const normalResidents = Math.max(
@@ -134,6 +193,9 @@ function useAdminDashboard(): AdminDashboardStats {
           pwdResidents,
           seniorResidents,
           childResidents,
+          newbornResidents,
+          infantResidents,
+          toddlerResidents,
           patientsServed,
           upcomingEvents,
           reportsSubmitted,
@@ -149,6 +211,9 @@ function useAdminDashboard(): AdminDashboardStats {
           pwdResidents: 0,
           seniorResidents: 0,
           childResidents: 0,
+          newbornResidents: 0,
+          infantResidents: 0,
+          toddlerResidents: 0,
           patientsServed: 0,
           upcomingEvents: 0,
           reportsSubmitted: 0,
@@ -170,6 +235,9 @@ function useAdminDashboard(): AdminDashboardStats {
     pwdResidents: state?.pwdResidents ?? 0,
     seniorResidents: state?.seniorResidents ?? 0,
     childResidents: state?.childResidents ?? 0,
+    newbornResidents: state?.newbornResidents ?? 0,
+    infantResidents: state?.infantResidents ?? 0,
+    toddlerResidents: state?.toddlerResidents ?? 0,
     patientsServed: state?.patientsServed ?? 0,
     upcomingEvents: state?.upcomingEvents ?? 0,
     reportsSubmitted: state?.reportsSubmitted ?? 0,

@@ -319,11 +319,12 @@ export default function AdminDashboardPage() {
       {/* Top stats */}
       <div className="flex flex-wrap flex-row gap-4 mb-6">
         <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
-        <StatCard label="Adult/s" value={stats.normalResidents} color="success" />
-        <StatCard label="Pregnant/s" value={stats.pregnantResidents} color="accent" />
-        <StatCard label="PWD/s" value={stats.pwdResidents} color="info" />
-        <StatCard label="Senior/s" value={stats.seniorResidents} color="error" />
+        <StatCard label="Newborn/s" value={stats.newbornResidents} color="accent" />
+        <StatCard label="Infant/s" value={stats.infantResidents} color="info" />
+        <StatCard label="Toddler/s" value={stats.toddlerResidents} color="primary" />
         <StatCard label="Child/s" value={stats.childResidents} color="success" />
+        <StatCard label="Adult/s" value={stats.normalResidents} color="success" />
+        <StatCard label="Senior/s" value={stats.seniorResidents} color="error" />
       </div>
 
       {/* Quick status + Calendar */}
