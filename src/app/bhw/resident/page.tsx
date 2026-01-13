@@ -125,22 +125,6 @@ const Resident = () => {
                 <option value="pregnant">Pregnant</option>
               </select>
             </div>
-
-            {/* Results Count */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Results</span>
-              </label>
-              <div className="input input-bordered input-sm bg-base-200 flex items-center">
-                <span className="text-sm">
-                  {filteredResidents.length} of {residents.length} residents
-                </span>
-              </div>
-            </div>
-            <Link href="/bhw/resident/add" className="btn btn-secondary btn-sm">
-              <FaPlus className="mr-2" />
-              Add Resident
-            </Link>
           </div>
         </div>
       </div>

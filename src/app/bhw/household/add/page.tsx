@@ -54,11 +54,14 @@ const AddHousehold = () => {
     
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.headOfHousehold?.trim()) newErrors.headOfHousehold = 'Head of Household is required'
-    if (!formData.headOfHouseholdContactNumber?.trim()) newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
-    
-    // Contact number validation
-    if (formData.headOfHouseholdContactNumber && !/^(\+63|0)?[0-9]{10,11}$/.test(formData.headOfHouseholdContactNumber.replace(/\s/g, ''))) {
-      newErrors.headOfHouseholdContactNumber = 'Please enter a valid contact number'
+    if (!formData.headOfHouseholdContactNumber?.trim()) {
+      newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
+    } else {
+      // Contact number validation - must be exactly 11 digits
+      const cleanedNumber = formData.headOfHouseholdContactNumber.replace(/\s/g, '')
+      if (!/^[0-9]{11}$/.test(cleanedNumber)) {
+        newErrors.headOfHouseholdContactNumber = 'Contact number must be exactly 11 digits'
+      }
     }
 
     setErrors(newErrors)
@@ -67,10 +70,20 @@ const AddHousehold = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // For contact number, only allow numeric input and limit to 11 digits
+    if (name === 'headOfHouseholdContactNumber') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 11)
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -221,8 +234,9 @@ const AddHousehold = () => {
                 name="headOfHouseholdContactNumber"
                 value={formData.headOfHouseholdContactNumber}
                 onChange={handleInputChange}
+                maxLength={11}
                 className={`input input-bordered ${errors.headOfHouseholdContactNumber ? 'input-error' : ''}`}
-                placeholder="Enter Contact Number"
+                placeholder="Enter 11-digit Contact Number"
               />
               {errors.headOfHouseholdContactNumber && <span className="label-text-alt text-error">{errors.headOfHouseholdContactNumber}</span>}
             </div>

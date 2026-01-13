@@ -7,8 +7,14 @@ interface StatusBadgeProps {
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
   const getStatusColor = (status: string) => {
-    switch (status) {
-      // Resident statuses
+    switch (status.toLowerCase()) {
+      // Resident statuses - age-based
+      case 'newborn':
+        return 'badge badge-accent whitespace-nowrap text-[10px]'
+      case 'infant':
+        return 'badge badge-info whitespace-nowrap text-[10px]'
+      case 'toddler':
+        return 'badge badge-primary whitespace-nowrap text-[10px]'
       case 'child':
         return 'badge badge-primary whitespace-nowrap text-[10px]'
       case 'adult':
@@ -37,6 +43,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
     }
   }
 
+  const formatStatusText = (status: string) => {
+    const lowerStatus = status.toLowerCase()
+    // Handle special cases
+    if (lowerStatus === 'pwd') return 'PWD'
+    // Capitalize first letter, rest lowercase
+    return lowerStatus.charAt(0).toUpperCase() + lowerStatus.slice(1)
+  }
+
   const getStatusSize = (size: string) => {
     switch (size) {
       case 'xs':
@@ -54,7 +68,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'xs' }) => {
 
   return (
     <span className={`${getStatusColor(status)} ${getStatusSize(size)}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {formatStatusText(status)}
     </span>
   )
 }

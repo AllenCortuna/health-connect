@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { successToast, errorToast } from '@/lib/toast'
 import { Household } from '@/interface/user'
@@ -24,6 +24,8 @@ const EditHousehold = () => {
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [originalHouseholdNumber, setOriginalHouseholdNumber] = useState<string>('')
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
 
   useEffect(() => {
     if (householdId) {
@@ -45,8 +47,10 @@ const EditHousehold = () => {
       
       if (householdSnap.exists()) {
         const data = householdSnap.data()
+        const householdNumber = data.householdNumber || ''
+        setOriginalHouseholdNumber(householdNumber)
         setFormData({
-          householdNumber: data.householdNumber || '',
+          householdNumber: householdNumber,
           address: data.address || '',
           headOfHousehold: data.headOfHousehold || '',
           headOfHouseholdContactNumber: data.headOfHouseholdContactNumber || '',
@@ -65,17 +69,51 @@ const EditHousehold = () => {
     }
   }
 
-  const validateForm = (): boolean => {
+  const checkHouseholdNumberExists = async (householdNumber: string): Promise<boolean> => {
+    if (!householdNumber.trim()) return false
+    
+    // If the household number hasn't changed, it's not a duplicate
+    if (householdNumber.trim() === originalHouseholdNumber.trim()) {
+      return false
+    }
+    
+    try {
+      setIsCheckingDuplicate(true)
+      const householdsRef = collection(db, 'household')
+      const q = query(householdsRef, where('householdNumber', '==', householdNumber.trim()))
+      const querySnapshot = await getDocs(q)
+      return !querySnapshot.empty
+    } catch (error) {
+      console.error('Error checking household number:', error)
+      return false
+    } finally {
+      setIsCheckingDuplicate(false)
+    }
+  }
+
+  const validateForm = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.householdNumber?.trim()) newErrors.householdNumber = 'Household Number is required'
+    if (!formData.householdNumber?.trim()) {
+      newErrors.householdNumber = 'Household Number is required'
+    } else {
+      // Check if household number already exists (excluding current household)
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        newErrors.householdNumber = 'Household Number already exists'
+      }
+    }
+    
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.headOfHousehold?.trim()) newErrors.headOfHousehold = 'Head of Household is required'
-    if (!formData.headOfHouseholdContactNumber?.trim()) newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
-    
-    // Contact number validation
-    if (formData.headOfHouseholdContactNumber && !/^(\+63|0)?[0-9]{10,11}$/.test(formData.headOfHouseholdContactNumber.replace(/\s/g, ''))) {
-      newErrors.headOfHouseholdContactNumber = 'Please enter a valid contact number'
+    if (!formData.headOfHouseholdContactNumber?.trim()) {
+      newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
+    } else {
+      // Contact number validation - must be exactly 11 digits
+      const cleanedNumber = formData.headOfHouseholdContactNumber.replace(/\s/g, '')
+      if (!/^[0-9]{11}$/.test(cleanedNumber)) {
+        newErrors.headOfHouseholdContactNumber = 'Contact number must be exactly 11 digits'
+      }
     }
 
     setErrors(newErrors)
@@ -84,10 +122,20 @@ const EditHousehold = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // For contact number, only allow numeric input and limit to 11 digits
+    if (name === 'headOfHouseholdContactNumber') {
+      const numericValue = value.replace(/\D/g, '').slice(0, 11)
+      setFormData(prev => ({
+        ...prev,
+        [name]: numericValue
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -95,10 +143,35 @@ const EditHousehold = () => {
     }
   }
 
+  const handleHouseholdNumberBlur = async () => {
+    if (formData.householdNumber.trim()) {
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          householdNumber: 'Household Number already exists'
+        }))
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) {
+    // Double-check if household number exists before submitting
+    if (formData.householdNumber.trim() && formData.householdNumber.trim() !== originalHouseholdNumber.trim()) {
+      const exists = await checkHouseholdNumberExists(formData.householdNumber)
+      if (exists) {
+        setErrors(prev => ({
+          ...prev,
+          householdNumber: 'Household Number already exists'
+        }))
+        errorToast('Household Number already exists. Please use a different number.')
+        return
+      }
+    }
+    
+    if (!(await validateForm())) {
       errorToast('Please fix the errors in the form')
       return
     }
@@ -149,10 +222,17 @@ const EditHousehold = () => {
                   name="householdNumber"
                   value={formData.householdNumber}
                   onChange={handleInputChange}
+                  onBlur={handleHouseholdNumberBlur}
                   className={`input input-bordered ${errors.householdNumber ? 'input-error' : ''}`}
                   placeholder="Enter Household Number"
+                  disabled={isCheckingDuplicate}
                 />
-                {errors.householdNumber && <span className="label-text-alt text-error">{errors.householdNumber}</span>}
+                {isCheckingDuplicate && (
+                  <span className="label-text-alt text-info">Checking availability...</span>
+                )}
+                {errors.householdNumber && !isCheckingDuplicate && (
+                  <span className="label-text-alt text-error">{errors.householdNumber}</span>
+                )}
               </div>
 
               <div className="form-control">
@@ -214,8 +294,9 @@ const EditHousehold = () => {
                 name="headOfHouseholdContactNumber"
                 value={formData.headOfHouseholdContactNumber}
                 onChange={handleInputChange}
+                maxLength={11}
                 className={`input input-bordered ${errors.headOfHouseholdContactNumber ? 'input-error' : ''}`}
-                placeholder="Enter Contact Number"
+                placeholder="Enter 11-digit Contact Number"
               />
               {errors.headOfHouseholdContactNumber && <span className="label-text-alt text-error">{errors.headOfHouseholdContactNumber}</span>}
             </div>
@@ -248,7 +329,7 @@ const EditHousehold = () => {
               <button
                 type="submit"
                 className="btn btn-secondary"
-                disabled={isLoading}
+                disabled={isLoading || isCheckingDuplicate}
               >
                 {isLoading ? (
                   <>

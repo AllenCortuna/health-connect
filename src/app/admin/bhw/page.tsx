@@ -19,8 +19,6 @@ const AdminBHW = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [genderFilter, setGenderFilter] = useState<string>('all')
   const [barangayFilter, setBarangayFilter] = useState<string>('all')
 
   // Helper function to safely format dates
@@ -121,11 +119,9 @@ const AdminBHW = () => {
       (bhw.name && bhw.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (bhw.email && bhw.email.toLowerCase().includes(searchTerm.toLowerCase()))
     
-    const matchesStatus = statusFilter === 'all' || bhw.status === statusFilter
-    const matchesGender = genderFilter === 'all' || bhw.gender === genderFilter
     const matchesBarangay = barangayFilter === 'all' || bhw.barangay === barangayFilter
     
-    return matchesSearch && matchesStatus && matchesGender && matchesBarangay
+    return matchesSearch && matchesBarangay
   })
 
   if (isLoading) {
@@ -154,7 +150,7 @@ const AdminBHW = () => {
       {/* Search and Filter Section */}
       <div className="card bg-base-100 shadow-lg mb-6">
         <div className="card-body p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Search Input */}
             <div className="form-control">
               <label className="label">
@@ -167,41 +163,6 @@ const AdminBHW = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"
               />
-            </div>
-
-            {/* Status Filter */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Status</span>
-              </label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="select select-bordered select-sm"
-              >
-                <option value="all">All Statuses</option>
-                <option value="single">Single</option>
-                <option value="married">Married</option>
-                <option value="widowed">Widowed</option>
-                <option value="separated">Separated</option>
-                <option value="divorced">Divorced</option>
-              </select>
-            </div>
-
-            {/* Gender Filter */}
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Gender</span>
-              </label>
-              <select
-                value={genderFilter}
-                onChange={(e) => setGenderFilter(e.target.value)}
-                className="select select-bordered select-sm"
-              >
-                <option value="all">All Genders</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
             </div>
 
             {/* Barangay Filter */}
@@ -257,8 +218,6 @@ const AdminBHW = () => {
                   <button
                     onClick={() => {
                       setSearchTerm('')
-                      setStatusFilter('all')
-                      setGenderFilter('all')
                       setBarangayFilter('all')
                     }}
                     className="btn btn-outline btn-secondary"

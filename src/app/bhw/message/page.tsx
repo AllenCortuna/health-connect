@@ -37,6 +37,12 @@ const Messages = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Fetch messages on component mount
+  useEffect(() => {
+    fetchMessages()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Update selected conversation when messages change
   useEffect(() => {
     if (selectedConversation && conversations.length > 0) {

@@ -8,6 +8,7 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
+import { useAccountStore } from '@/store/accountStore'
 
 function StatCard({ label, value, color }: { label: string; value: number | string; color: 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'error' }) {
   return (
@@ -83,8 +84,8 @@ function MonthCalendar({
     if (!day) return 0
     const year = date.getFullYear()
     const month = date.getMonth()
-    const dayDate = new Date(year, month, day)
-    const dateString = dayDate.toISOString().split('T')[0] // YYYY-MM-DD format
+    // Use local date formatting to avoid timezone issues
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` // YYYY-MM-DD format
     
     return announcements.filter(announcement => announcement.date === dateString).length
   }
@@ -179,7 +180,64 @@ function MonthCalendar({
   )
 }
 
+// Helper function to calculate age in months
+function getAgeInMonths(birthDate: Date): number {
+  const today = new Date()
+  const years = today.getFullYear() - birthDate.getFullYear()
+  const months = today.getMonth() - birthDate.getMonth()
+  const days = today.getDate() - birthDate.getDate()
+  
+  let totalMonths = years * 12 + months
+  if (days < 0) totalMonths--
+  
+  return Math.max(0, totalMonths)
+}
+
+// Helper function to get age-based status
+function getAgeBasedStatus(birthDate: Date | undefined, originalStatus: string): string {
+  if (!birthDate || !(birthDate instanceof Date)) return originalStatus
+  
+  // Don't override pwd or pregnant status
+  if (originalStatus === 'pwd' || originalStatus === 'pregnant') {
+    return originalStatus
+  }
+  
+  const months = getAgeInMonths(birthDate)
+  const years = Math.floor(months / 12)
+  
+  if (months < 2) {
+    return 'newborn'
+  } else if (months < 12) {
+    return 'infant'
+  } else if (years < 4) {
+    return 'toddler'
+  } else if (years < 18) {
+    return 'child'
+  } else if (years < 65) {
+    return 'adult'
+  } else {
+    return 'senior'
+  }
+}
+
+// Helper function to calculate age display
+function getAgeDisplay(birthDate: Date | undefined): string {
+  if (!birthDate || !(birthDate instanceof Date)) return ''
+  
+  const months = getAgeInMonths(birthDate)
+  const years = Math.floor(months / 12)
+  
+  if (months < 12) {
+    return `${months} mo`
+  } else if (years < 4) {
+    return `${years} yr`
+  } else {
+    return `${years} yr`
+  }
+}
+
 export default function AdminDashboardPage() {
+  const { account } = useAccountStore()
   const stats = useAdminDashboard()
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -222,7 +280,11 @@ export default function AdminDashboardPage() {
 
   const getAnnouncementsForDate = (date: Date | null): Announcement[] => {
     if (!date) return []
-    const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD format
+    // Use local date formatting to avoid timezone issues
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` // YYYY-MM-DD format
     return allAnnouncements.filter(announcement => announcement.date === dateString)
   }
 
@@ -250,6 +312,10 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="container mx-auto p-6">
+      <div className="flex flex-col justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-secondary">Dashboard</h1>
+        <p className="text-gray-600"> Welcome back, {account?.name || 'Admin'}</p>
+      </div>
       {/* Top stats */}
       <div className="flex flex-wrap flex-row gap-4 mb-6">
         <StatCard label="Total of Population" value={stats.totalPopulation} color="secondary" />
@@ -305,17 +371,18 @@ export default function AdminDashboardPage() {
             ) : (
               stats.recentResidents.map((r) => {
                 const birth = r.birthDate instanceof Date ? r.birthDate : undefined
-                const age = birth ? Math.max(0, new Date(Date.now() - birth.getTime()).getUTCFullYear() - 1970) : ''
+                const ageDisplay = getAgeDisplay(birth)
+                const displayStatus = getAgeBasedStatus(birth, r.status)
                 return (
                   <div key={r.id} className="bg-base-200 rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="font-semibold text-sm text-zinc-700">{r.fullName ?? ''}</div>
-                      <StatusBadge status={r.status} size="xs" />
+                      <StatusBadge status={displayStatus} size="xs" />
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs text-zinc-500">
                       <div>
                         <span className="font-medium">Age: </span>
-                        {age}
+                        {ageDisplay}
                       </div>
                       <div>
                         <span className="font-medium">Gender: </span>
@@ -352,15 +419,16 @@ export default function AdminDashboardPage() {
               <tbody>
                 {stats.recentResidents.map((r) => {
                   const birth = r.birthDate instanceof Date ? r.birthDate : undefined
-                  const age = birth ? Math.max(0, new Date(Date.now() - birth.getTime()).getUTCFullYear() - 1970) : ''
+                  const ageDisplay = getAgeDisplay(birth)
+                  const displayStatus = getAgeBasedStatus(birth, r.status)
                   return (
                     <tr key={r.id} className="text-xs font-medium text-zinc-500">
-                      <td>{age}</td>
+                      <td>{ageDisplay}</td>
                       <td>{r.fullName ?? ''}</td>
                       <td>{r.height && r.weight ? `${r.height} cm / ${r.weight} kg` : '—'}</td>
                       <td className="capitalize">{r.gender}</td>
                       <td>{birth ? birth.toLocaleDateString() : ''}</td>
-                      <td><StatusBadge status={r.status} size="xs" /></td>
+                      <td><StatusBadge status={displayStatus} size="xs" /></td>
                     </tr>
                   )
                 })}

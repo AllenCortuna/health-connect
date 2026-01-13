@@ -9,7 +9,6 @@ import {
     FaLayerGroup,
     FaCalendarWeek
 } from 'react-icons/fa';
-import { useRouter } from 'next/navigation';
 
 interface MenuItem {
     href: string;
@@ -21,8 +20,7 @@ interface MenuItem {
     bgGradient: string;
 }
 
-const ReportsPage = () => {
-    const router = useRouter();
+export default function ReportsPage() {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -145,17 +143,14 @@ const ReportsPage = () => {
                     }`}
                     style={{ transitionDelay: '450ms' }}
                 >
-                    <button
-                        onClick={() => router.back()}
-                        className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-primary bg-white border hover:shadow-lg hover:shadow-primary/50 border-zinc-300 hover:border-primary/50 shadow-sm transition-all duration-300"
+                    <Link
+                        href="/admin/dashboard"
+                        className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-primary bg-white border hover:shadow-lg hover:shadow-primary/50 border-zinc-300 hover:border-primary/50 shadow-sm transition-all duration-300 w-fit"
                     >
-                        <FaChevronLeft className="text-xs group-hover:-translate-x-1 transition-transform duration-300" />
-                        <span>Back to Dashboard</span>
-                    </button>
+                        <FaChevronLeft className="text-xs group-hover:-translate-x-1 transition-transform duration-300" /> Back to Dashboard
+                    </Link>
                 </div>
-            </div>
+            </div>  
         </div>
     );
 };
-
-export default ReportsPage;
