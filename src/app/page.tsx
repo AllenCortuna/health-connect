@@ -20,7 +20,7 @@ const LoginPage: React.FC = () => {
     const loginOptions = [
         {
             href: "/login/resident",
-            title: "Resident Login",
+            title: "Household Login",
             subtitle: "Access your health records and services.",
             // Used AiOutlineUser for resident
             icon: AiOutlineUser,

@@ -21,6 +21,7 @@ const AddHousehold = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
 
   const checkHouseholdNumberExists = async (householdNumber: string): Promise<boolean> => {
     if (!householdNumber.trim()) return false
@@ -39,6 +40,30 @@ const AddHousehold = () => {
     }
   }
 
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) return false
+
+    try {
+      setIsCheckingEmail(true)
+
+      const accountsRef = collection(db, 'accounts')
+      const residentsRef = collection(db, 'resident')
+
+      const [accountsSnap, residentsSnap] = await Promise.all([
+        getDocs(query(accountsRef, where('email', '==', trimmedEmail))),
+        getDocs(query(residentsRef, where('email', '==', trimmedEmail)))
+      ])
+
+      return !accountsSnap.empty || !residentsSnap.empty
+    } catch (error) {
+      console.error('Error checking email uniqueness:', error)
+      return false
+    } finally {
+      setIsCheckingEmail(false)
+    }
+  }
+
   const validateForm = async (): Promise<boolean> => {
     const newErrors: Record<string, string> = {}
 
@@ -54,6 +79,22 @@ const AddHousehold = () => {
     
     if (!formData.address?.trim()) newErrors.address = 'Address is required'
     if (!formData.headOfHousehold?.trim()) newErrors.headOfHousehold = 'Head of Household is required'
+
+    // Email: required, valid format, and must be unique across accounts and residents
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required'
+    } else {
+      const trimmedEmail = formData.email.trim()
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(trimmedEmail)) {
+        newErrors.email = 'Please enter a valid email address'
+      } else {
+        const emailExists = await checkEmailExists(trimmedEmail)
+        if (emailExists) {
+          newErrors.email = 'Email already exists in the system'
+        }
+      }
+    }
     if (!formData.headOfHouseholdContactNumber?.trim()) {
       newErrors.headOfHouseholdContactNumber = 'Contact Number is required'
     } else {
@@ -188,8 +229,19 @@ const AddHousehold = () => {
                   className={`input input-bordered ${errors.email ? 'input-error' : ''}`}
                   placeholder="Enter Email Address"
                 />
-                <span className="label-text-alt text-[10px] text-warning drop-shadow w-80">Email required for household account creation</span>
-                {errors.email && <span className="label-text-alt text-error">{errors.email}</span>}
+                <span className="label-text-alt text-[10px] text-warning drop-shadow w-80">
+                  Email required for household account creation and must be unique
+                </span>
+                {isCheckingEmail && (
+                  <span className="label-text-alt text-info">
+                    Checking email availability...
+                  </span>
+                )}
+                {errors.email && !isCheckingEmail && (
+                  <span className="label-text-alt text-error">
+                    {errors.email}
+                  </span>
+                )}
               </div>
 
               <div className="form-control">
@@ -269,7 +321,7 @@ const AddHousehold = () => {
               <button
                 type="submit"
                 className="btn btn-secondary"
-                disabled={isLoading || isCheckingDuplicate}
+                disabled={isLoading || isCheckingDuplicate || isCheckingEmail}
               >
                 {isLoading ? (
                   <>

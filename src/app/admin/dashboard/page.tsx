@@ -334,10 +334,6 @@ export default function AdminDashboardPage() {
             <div className="text-lg text-secondary font-bold mb-4">Quick Status</div>
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="font-bold text-xs text-zinc-500">Patients Served</div>
-                <div className="ml-auto text-xl font-bold text-secondary">{stats.patientsServed}</div>
-              </div>
-              <div className="flex items-center gap-4">
                 <div className="font-bold text-xs text-zinc-500">Upcoming Events</div>
                 <div className="ml-auto text-xl font-bold text-secondary">{stats.upcomingEvents}</div>
               </div>
@@ -363,7 +359,7 @@ export default function AdminDashboardPage() {
       {/* Residents list */}
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body">
-          <div className="text-lg text-secondary font-bold mb-4">List of Residents</div>
+          <div className="text-lg text-secondary font-bold mb-4">Recently Added</div>
           
           {/* Mobile: Card layout */}
           <div className="md:hidden space-y-3">

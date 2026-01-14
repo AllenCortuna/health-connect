@@ -9,6 +9,29 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { FaArrowLeft, FaSave } from 'react-icons/fa'
 import { constructFullName } from '@/lib/objects'
 
+// Helper: calculate age in months
+function getAgeInMonthsResident(birthDate: Date): number {
+  const today = new Date()
+  const years = today.getFullYear() - birthDate.getFullYear()
+  const months = today.getMonth() - birthDate.getMonth()
+  const days = today.getDate() - birthDate.getDate()
+
+  let totalMonths = years * 12 + months
+  if (days < 0) totalMonths--
+  return Math.max(0, totalMonths)
+}
+
+// Helper: map age to Resident.status bucket using newborn/infant/toddler breakpoints
+function getStatusFromAge(birthDate: Date): Resident['status'] {
+  const months = getAgeInMonthsResident(birthDate)
+  const years = Math.floor(months / 12)
+
+  // NEWBORN (0–2 mo), INFANT (2 mo–1 yr), TODDLER (1–4 yr) → overall "child" bucket
+  if (years < 18) return 'child'
+  if (years < 65) return 'adult'
+  return 'senior'
+}
+
 const EditResident = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -104,14 +127,12 @@ const EditResident = () => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.familyNo?.trim()) newErrors.familyNo = 'Family Number is required'
     if (!formData.firstName?.trim()) newErrors.firstName = 'First Name is required'
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last Name is required'
-    if (!formData.birthPlace?.trim()) newErrors.birthPlace = 'Birth Place is required'
-    if (!formData.address?.trim()) newErrors.address = 'Address is required'
-    if (!formData.email?.trim()) newErrors.email = 'Email is required'
+    if (!formData.birthDate?.trim()) newErrors.birthDate = 'Birth Date is required'
+
     
-    // Email validation
+    // Email validation (optional but if provided, should be valid)
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
@@ -169,10 +190,22 @@ const EditResident = () => {
     setIsSaving(true)
     
     try {
+      const parsedBirthDate = new Date(formData.birthDate)
+      if (isNaN(parsedBirthDate.getTime())) {
+        errorToast('Please provide a valid birth date')
+        setIsSaving(false)
+        return
+      }
+
+      // Auto-derive status from age unless explicitly marked as PWD or Pregnant
+      const status = getStatusFromAge(parsedBirthDate)
+      
+
       const updateData = {
         ...formData,
+        status,
         fullName: constructFullName(formData.firstName || '', formData.middleName, formData.lastName || '', formData.suffix),
-        birthDate: new Date(formData.birthDate)
+        birthDate: parsedBirthDate
       }
 
       // Remove undefined values
@@ -311,8 +344,9 @@ const EditResident = () => {
                   name="birthDate"
                   value={formData.birthDate}
                   onChange={handleInputChange}
-                  className="input input-bordered"
+                  className={`input input-bordered ${errors.birthDate ? 'input-error' : ''}`}
                 />
+                {errors.birthDate && <span className="label-text-alt text-error">{errors.birthDate}</span>}
               </div>
 
               <div className="form-control flex flex-col">
@@ -370,7 +404,7 @@ const EditResident = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control flex flex-col">
                 <label className="label">
-                  <span className="label-text font-semibold text-xs">Email *</span>
+                  <span className="label-text font-semibold text-xs">Email</span>
                 </label>
                 <input
                   type="email"
@@ -399,10 +433,10 @@ const EditResident = () => {
               </div>
             </div>
 
-            {/* Address */}
+            {/* Address (optional) */}
             <div className="form-control flex flex-col">
               <label className="label">
-                <span className="label-text font-semibold text-xs">Complete Address *</span>
+                <span className="label-text font-semibold text-xs">Complete Address</span>
               </label>
               <textarea
                 name="address"

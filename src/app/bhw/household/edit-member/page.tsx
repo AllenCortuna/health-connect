@@ -144,9 +144,8 @@ const EditHouseholdMember = () => {
     if (!formData.firstName?.trim()) newErrors.firstName = 'First Name is required'
     if (!formData.lastName?.trim()) newErrors.lastName = 'Last Name is required'
     if (!formData.birthPlace?.trim()) newErrors.birthPlace = 'Birth Place is required'
-    if (!formData.email?.trim()) newErrors.email = 'Email is required'
     
-    // Email validation
+    // Email validation (optional but if provided, should be valid)
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address'
     }
@@ -468,9 +467,7 @@ const EditHouseholdMember = () => {
                     onChange={handleInputChange}
                     className="select select-bordered select-sm"
                   >
-                    <option value="child">Child</option>
-                    <option value="adult">Adult</option>
-                    <option value="senior">Senior</option>
+                    <option value="4ps">4ps</option>
                     <option value="pwd">PWD</option>
                     <option value="pregnant">Pregnant</option>
                   </select>
@@ -481,7 +478,7 @@ const EditHouseholdMember = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold text-xs">Email *</span>
+                    <span className="label-text font-semibold text-xs">Email</span>
                   </label>
                   <input
                     type="email"

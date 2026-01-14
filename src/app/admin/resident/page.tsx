@@ -214,7 +214,7 @@ const Resident = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>Family Number</th>
+                    <th>No. of Family</th>
                     <th>Household Head</th>
                     <th>Gender</th>
                     <th>Actions</th>
