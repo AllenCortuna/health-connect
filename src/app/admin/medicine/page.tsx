@@ -5,10 +5,11 @@ import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, deleteDoc,
 import { db } from '@/lib/firebase'
 import type { Medicine } from '@/interface/data'
 import { useRouter } from 'next/navigation'
-import { FaPlus, FaChevronDown, FaChevronRight } from 'react-icons/fa'
+import { FaPlus, FaChevronDown, FaChevronRight, FaEdit } from 'react-icons/fa'
 import StatusBadge from '@/components/common/StatusBadge'
 import ViewMedicineModal from '@/components/bhw/ViewMedicineModal'
 import ReleaseMedicineModal from '@/components/admin/ReleaseMedicineModal'
+import EditMedicineModal from '@/components/admin/EditMedicineModal'
 import ConfirmDeleteMedicineModal from '@/components/bhw/ConfirmDeleteMedicineModal'
 import { successToast, errorToast } from '@/lib/toast'
 
@@ -24,6 +25,9 @@ const Medicine = () => {
   const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [medicineToEdit, setMedicineToEdit] = useState<Medicine | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -100,6 +104,16 @@ const Medicine = () => {
     setMedicineToDelete(null)
   }
 
+  const openEditModal = (medicine: Medicine) => {
+    setMedicineToEdit(medicine)
+    setIsEditModalOpen(true)
+  }
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false)
+    setMedicineToEdit(null)
+  }
+
   const isExpired = (medicine: Medicine): boolean => {
     if (!(medicine.expDate instanceof Date)) return false
     const today = new Date()
@@ -129,6 +143,31 @@ const Medicine = () => {
       errorToast('Failed to delete medicine. Please try again.')
     } finally {
       setIsDeleting(false)
+    }
+  }
+
+  const handleEditMedicine = async (name: string, medCode: string, description: string, medType: Medicine['medType']) => {
+    if (!medicineToEdit) return
+
+    setIsEditing(true)
+    try {
+      const medicineRef = doc(db, 'medicine', medicineToEdit.id)
+      await updateDoc(medicineRef, {
+        name,
+        medCode,
+        description,
+        medType,
+        updatedAt: serverTimestamp()
+      })
+      
+      successToast('Medicine updated successfully!')
+      closeEditModal()
+      fetchMedicines() // Refresh the list
+    } catch (error) {
+      console.error('Error updating medicine:', error)
+      errorToast('Failed to update medicine. Please try again.')
+    } finally {
+      setIsEditing(false)
     }
   }
 
@@ -308,7 +347,7 @@ const Medicine = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by name, code, or description..."
+                placeholder="Search by name or code"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"
@@ -496,6 +535,16 @@ const Medicine = () => {
                         >
                           View
                         </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openEditModal(medicine)
+                          }}
+                          className="btn btn-outline btn-info btn-xs"
+                          title="Edit Medicine"
+                        >
+                          <FaEdit />
+                        </button>
                               {canDelete(medicine) ? (
                                 <button
                                   onClick={(e) => {
@@ -547,6 +596,15 @@ const Medicine = () => {
         onClose={closeReleaseModal}
         onRelease={handleReleaseMedicine}
         isReleasing={isReleasing}
+      />
+
+      {/* Edit Medicine Modal */}
+      <EditMedicineModal
+        medicine={medicineToEdit}
+        isOpen={isEditModalOpen}
+        onClose={closeEditModal}
+        onSave={handleEditMedicine}
+        isSaving={isEditing}
       />
 
       {/* Delete Medicine Modal */}

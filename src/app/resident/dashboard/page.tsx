@@ -3,14 +3,14 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAccountStore } from '@/store/accountStore'
 import { useResidentDashboard } from '@/hooks/useResidentDashboard'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, where } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
 import AnnouncementModal from '@/components/admin/AnnouncementModal'
 import { 
   HiBell, 
-  HiUser, 
   HiHeart,
+  HiUserGroup,
 } from 'react-icons/hi'
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 
@@ -79,8 +79,8 @@ function MonthCalendar({
     if (!day) return 0
     const year = date.getFullYear()
     const month = date.getMonth()
-    const dayDate = new Date(year, month, day)
-    const dateString = dayDate.toISOString().split('T')[0] // YYYY-MM-DD format
+    // Format date in local time to avoid timezone shifts
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` // YYYY-MM-DD format
     
     return announcements.filter(announcement => announcement.date === dateString).length
   }
@@ -188,6 +188,7 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
+  const [totalFamilyMembers, setTotalFamilyMembers] = useState<number>(0)
 
   useEffect(() => {
     const fetchAllAnnouncements = async () => {
@@ -218,6 +219,27 @@ const Dashboard = () => {
     fetchAllAnnouncements()
   }, [])
 
+  useEffect(() => {
+    const fetchFamilyMembers = async () => {
+      if (!residentData?.familyNo) {
+        setTotalFamilyMembers(0)
+        return
+      }
+
+      try {
+        const residentsRef = collection(db, 'resident')
+        const q = query(residentsRef, where('familyNo', '==', residentData.familyNo))
+        const querySnapshot = await getDocs(q)
+        setTotalFamilyMembers(querySnapshot.size)
+      } catch (error) {
+        console.error('Error fetching family members:', error)
+        setTotalFamilyMembers(0)
+      }
+    }
+
+    fetchFamilyMembers()
+  }, [residentData?.familyNo])
+
   const handleDayClick = (day: number, fullDate: Date) => {
     setSelectedDate(fullDate)
     setIsModalOpen(true)
@@ -225,7 +247,11 @@ const Dashboard = () => {
 
   const getAnnouncementsForDate = (date: Date | null): Announcement[] => {
     if (!date) return []
-    const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD format
+    // Format date in local time to avoid timezone shifts
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` // YYYY-MM-DD format
     return allAnnouncements.filter(announcement => announcement.date === dateString)
   }
 
@@ -299,22 +325,11 @@ const Dashboard = () => {
 
         <div className="stat bg-accent text-accent-content rounded-lg">
           <div className="stat-figure text-accent-content">
-            <HiHeart className="w-8 h-8" />
+            <HiUserGroup className="w-8 h-8" />
           </div>
-          <div className="stat-title text-accent-content">Health Status</div>
-          <div className="stat-value text-accent-content text-lg">
-            {healthInfo.healthStatus || 'N/A'}
-          </div>
-          <div className="stat-desc text-accent-content">Current status</div>
-        </div>
-
-        <div className="stat bg-neutral text-neutral-content rounded-lg">
-          <div className="stat-figure text-neutral-content">
-            <HiUser className="w-8 h-8" />
-          </div>
-          <div className="stat-title text-neutral-content">Age</div>
-          <div className="stat-value text-neutral-content">{healthInfo.age || 'N/A'}</div>
-          <div className="stat-desc text-neutral-content">Years old</div>
+          <div className="stat-title text-accent-content">Total Family Members</div>
+          <div className="stat-value text-accent-content">{totalFamilyMembers}</div>
+          <div className="stat-desc text-accent-content">Family size</div>
         </div>
       </div>
 

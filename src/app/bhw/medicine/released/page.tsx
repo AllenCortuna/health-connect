@@ -129,13 +129,6 @@ export default function ReleasedMedicinesPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.push('/bhw/medicine')}
-            className="btn btn-ghost btn-sm"
-          >
-            <FaArrowLeft className="mr-2" />
-            Back
-          </button>
           <h1 className="text-2xl font-bold text-secondary">Released Medicines</h1>
         </div>
         <div className="card bg-base-100 shadow-xl">

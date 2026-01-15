@@ -470,6 +470,7 @@ const EditHouseholdMember = () => {
                     <option value="4ps">4ps</option>
                     <option value="pwd">PWD</option>
                     <option value="pregnant">Pregnant</option>
+                    <option value="IPs">IP&apos;s</option>
                   </select>
                 </div>
               </div>
