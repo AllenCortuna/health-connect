@@ -1,8 +1,7 @@
 import React, { useRef } from 'react'
-import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, pdf } from '@react-pdf/renderer'
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { Resident } from '@/interface/user'
-import StatusBadge from '@/components/common/StatusBadge'
-import { FaPrint, FaTimes, FaDownload } from 'react-icons/fa'
+import { FaTimes, FaDownload } from 'react-icons/fa'
 
 interface ViewResidentModalProps {
   resident: Resident | null
@@ -133,8 +132,19 @@ const ResidentPDF = ({ resident }: { resident: Resident }) => {
           </View>
           <View style={styles.row}>
             <View style={styles.column}>
-              <Text style={styles.label}>Status</Text>
-              <Text style={styles.value}>{resident.status}</Text>
+              <Text style={styles.label}>Marginalized Group</Text>
+              <Text style={styles.value}>
+                {resident.marginalizedGroup && resident.marginalizedGroup.length > 0
+                  ? resident.marginalizedGroup
+                      .map((group) => 
+                        group === 'IPs' ? "IP's" : 
+                        group === '4ps' ? '4Ps' : 
+                        group === 'pwd' ? 'PWD' : 
+                        group.charAt(0).toUpperCase() + group.slice(1)
+                      )
+                      .join(', ')
+                  : 'N/A'}
+              </Text>
             </View>
             <View style={styles.column}>
               <Text style={styles.label}>Spouse Name</Text>
@@ -223,35 +233,12 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
     return 'N/A'
   }
 
-  const handlePrint = async () => {
-    try {
-      const blob = await pdf(<ResidentPDF resident={resident} />).toBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `resident-${resident.firstName}-${resident.lastName}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('Error generating PDF:', error)
-    }
-  }
-
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-bold text-lg text-secondary">Resident Information</h3>
           <div className="flex gap-2">
-            <button
-              onClick={handlePrint}
-              className="btn btn-sm btn-primary"
-            >
-              <FaPrint className="mr-1" />
-              Print PDF
-            </button>
             <PDFDownloadLink
               document={<ResidentPDF resident={resident} />}
               fileName={`resident-${resident.firstName}-${resident.lastName}.pdf`}
@@ -334,9 +321,23 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
                 </div>
                 <div>
                   <label className="label">
-                    <span className="label-text text-xs font-semibold">Status</span>
+                    <span className="label-text text-xs font-semibold">Marginalized Group</span>
                   </label>
-                  <StatusBadge status={resident.status} size="xs" />
+                  {resident.marginalizedGroup && resident.marginalizedGroup.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {resident.marginalizedGroup.map((group) => (
+                        <span
+                          key={group}
+                          className="badge badge-sm badge-outline"
+                          title={group}
+                        >
+                          {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
                 </div>
                 <div>
                   <label className="label">

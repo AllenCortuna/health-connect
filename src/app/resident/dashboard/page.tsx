@@ -305,8 +305,24 @@ const Dashboard = () => {
           Welcome back, {account?.name || residentData?.fullName || 'Resident'}!
         </p>
         {residentData && (
-          <div className="mt-2 text-sm text-gray-500">
-            Family Number: {residentData.familyNo} • {residentData.status.charAt(0).toUpperCase() + residentData.status.slice(1)}
+          <div className="mt-2 text-sm text-gray-500 flex items-center gap-2 flex-wrap">
+            <span>Family Number: {residentData.familyNo}</span>
+            {residentData.marginalizedGroup && residentData.marginalizedGroup.length > 0 && (
+              <>
+                <span>•</span>
+                <div className="flex flex-wrap gap-1">
+                  {residentData.marginalizedGroup.map((group) => (
+                    <span
+                      key={group}
+                      className="badge badge-sm badge-outline"
+                      title={group}
+                    >
+                      {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -398,7 +414,24 @@ const Dashboard = () => {
                         {healthInfo.healthStatus || 'N/A'}
                       </span>
                     </div>
-                    <div><span className="font-medium">Category:</span> {residentData.status}</div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">Marginalized Group:</span>
+                      {residentData.marginalizedGroup && residentData.marginalizedGroup.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {residentData.marginalizedGroup.map((group) => (
+                            <span
+                              key={group}
+                              className="badge badge-sm badge-outline"
+                              title={group}
+                            >
+                              {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </div>
                     {residentData.spouseName && (
                       <div><span className="font-medium">Spouse:</span> {residentData.spouseName}</div>
                     )}

@@ -40,9 +40,10 @@ export interface Resident {
     suffix?: string;
     birthDate: Date;
     birthPlace: string;
+    activeStatus: boolean;
     address: string;
     gender: 'male' | 'female';
-    status: 'child' | 'adult' | 'senior' | 'pwd' | 'pregnant';
+    marginalizedGroup: string[];
     contactNumber?: string;
     email?: string;
     createdAt?: Date | { toDate: () => Date };

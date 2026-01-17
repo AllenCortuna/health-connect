@@ -1,7 +1,7 @@
 import { toast, Zoom } from 'react-toastify';
 export const successToast = (text: string) => toast.success(text, {
     position: "top-center",
-    autoClose: 5000,
+    autoClose: 1000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,
@@ -13,7 +13,7 @@ export const successToast = (text: string) => toast.success(text, {
 
 export const errorToast = (text: string) => toast.error(text, {
     position: "top-center",
-    autoClose: 5000,
+    autoClose: 1000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,
@@ -25,7 +25,7 @@ export const errorToast = (text: string) => toast.error(text, {
 
 export const warningToast = (text: string) => toast.warning(text, {
     position: "top-center",
-    autoClose: 5000,
+    autoClose: 1000,
     hideProgressBar: false,
     closeOnClick: false,
     pauseOnHover: true,

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Resident } from '@/interface/user'
 import { useRouter } from 'next/navigation'
@@ -9,6 +9,8 @@ import { FaPlus } from 'react-icons/fa'
 import ViewResidentModal from '@/components/bhw/ViewResidentModal'
 import StatusBadge from '@/components/common/StatusBadge'
 import Link from 'next/link'
+import { getAgeBasedStatus, getAgeDisplay } from '@/lib/ageUtils'
+import { successToast, errorToast } from '@/lib/toast'
 
 const Resident = () => {
   const router = useRouter()
@@ -18,6 +20,7 @@ const Resident = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [togglingResidentId, setTogglingResidentId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchResidents()
@@ -59,6 +62,34 @@ const Resident = () => {
     setSelectedResident(null)
   }
 
+  const handleToggleActiveStatus = async (resident: Resident) => {
+    if (togglingResidentId) return // Prevent multiple simultaneous toggles
+    
+    try {
+      setTogglingResidentId(resident.id)
+      const residentRef = doc(db, 'resident', resident.id)
+      const newActiveStatus = !(resident.activeStatus ?? true)
+      
+      await updateDoc(residentRef, {
+        activeStatus: newActiveStatus
+      })
+      
+      // Update local state
+      setResidents(prevResidents =>
+        prevResidents.map(r =>
+          r.id === resident.id ? { ...r, activeStatus: newActiveStatus } : r
+        )
+      )
+      
+      successToast(`Resident ${newActiveStatus ? 'activated' : 'deactivated'} successfully!`)
+    } catch (error) {
+      console.error('Error toggling active status:', error)
+      errorToast('Failed to update active status. Please try again.')
+    } finally {
+      setTogglingResidentId(null)
+    }
+  }
+
 
   // Filter and search residents
   const filteredResidents = residents.filter((resident) => {
@@ -66,7 +97,14 @@ const Resident = () => {
       resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesStatus = statusFilter === 'all' || resident.status === statusFilter
+    // Use marginalizedGroup for filtering, or derive from age if not present
+    const marginalizedGroups = resident.marginalizedGroup || []
+    const ageStatus = getAgeBasedStatus(resident.birthDate, marginalizedGroups.find(g => ['child', 'adult', 'senior', 'pwd', 'pregnant'].includes(g)) || '')
+    const allGroups = [...marginalizedGroups]
+    if (!allGroups.includes(ageStatus)) {
+      allGroups.push(ageStatus)
+    }
+    const matchesStatus = statusFilter === 'all' || allGroups.includes(statusFilter)
     
     return matchesSearch && matchesStatus
   })
@@ -118,6 +156,9 @@ const Resident = () => {
                 className="select select-bordered select-sm"
               >
                 <option value="all">All</option>
+                <option value="newborn">Newborn</option>
+                <option value="infant">Infant</option>
+                <option value="toddler">Toddler</option>
                 <option value="child">Child</option>
                 <option value="adult">Adult</option>
                 <option value="senior">Senior</option>
@@ -166,8 +207,11 @@ const Resident = () => {
                   <tr>
                     <th>Name</th>
                     <th>Household Number</th>
+                    <th>Age</th>
                     <th>Status</th>
                     <th>Gender</th>
+                    <th>Marginalized Group</th>
+                    <th>Active Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -183,11 +227,51 @@ const Resident = () => {
                           {resident.householdId}
                       </td>
                       <td>
-                        <StatusBadge status={resident.status} size="xs" />
+                        <div className="font-medium">
+                          {getAgeDisplay(resident.birthDate)}
+                        </div>
+                      </td>
+                      <td>
+                        <StatusBadge status={getAgeBasedStatus(resident.birthDate, resident.marginalizedGroup?.find(g => ['child', 'adult', 'senior', 'pwd', 'pregnant'].includes(g)) || '')} size="xs" />
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
                           <span className="capitalize">{resident.gender}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-wrap gap-1">
+                          {resident.marginalizedGroup && resident.marginalizedGroup.length > 0 ? (
+                            resident.marginalizedGroup.map((group) => (
+                              <span
+                                key={group}
+                                className="badge badge-sm badge-outline"
+                                title={group}
+                              >
+                                {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <span className={`badge badge-sm ${(resident.activeStatus ?? true) ? 'badge-success' : 'badge-error'}`}>
+                            {(resident.activeStatus ?? true) ? 'Active' : 'Inactive'}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={resident.activeStatus ?? true}
+                            onChange={() => handleToggleActiveStatus(resident)}
+                            disabled={togglingResidentId === resident.id}
+                            className="toggle toggle-primary toggle-sm"
+                            title={`Toggle to ${(resident.activeStatus ?? true) ? 'deactivate' : 'activate'} resident`}
+                          />
+                          {togglingResidentId === resident.id && (
+                            <span className="loading loading-spinner loading-xs"></span>
+                          )}
                         </div>
                       </td>
                       <td className="flex items-center gap-2">

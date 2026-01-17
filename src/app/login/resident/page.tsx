@@ -325,7 +325,7 @@ const LoginPage: React.FC = () => {
     return (
         <div className="min-h-screen bg-gradient-to-bl from-primary to-accent flex items-center justify-center p-4 animate-gradient-x">
             <Link href="/sign-up/resident" className="btn btn-xs btn-secondary absolute top-10 right-4">
-                    Sign Up as Resident
+                    Sign Up as Household
             </Link>
             <div className="w-full max-w-md space-y-8 transform hover:scale-[1.01] transition-transform duration-300">
                 {/* Header Section */}

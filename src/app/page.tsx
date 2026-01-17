@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
     const signUpOptions = [
         {
             href: "/sign-up/resident",
-            title: "Resident Sign Up",
+            title: "Household Sign Up",
             // Used AiOutlineHeart for health/resident
             icon: AiOutlineHeart,
             color: "text-teal-400 bg-teal-400/10 hover:bg-teal-400/20",

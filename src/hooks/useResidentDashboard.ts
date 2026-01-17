@@ -125,7 +125,7 @@ export function useResidentDashboard() {
 
   const fetchResidentData = async () => {
     try {
-      const residentsRef = collection(db, 'residents')
+      const residentsRef = collection(db, 'resident')
       const q = query(residentsRef, where('email', '==', account?.email))
       
       const querySnapshot = await getDocs(q)
@@ -160,9 +160,10 @@ export function useResidentDashboard() {
       const age = new Date().getFullYear() - new Date(resident.birthDate).getFullYear()
       
       let healthStatus = 'Good'
-      if (resident.status === 'pwd') healthStatus = 'Special Care'
-      else if (resident.status === 'pregnant') healthStatus = 'Prenatal Care'
-      else if (resident.status === 'senior') healthStatus = 'Senior Care'
+      const marginalizedGroups = resident.marginalizedGroup || []
+      if (marginalizedGroups.includes('pwd')) healthStatus = 'Special Care'
+      else if (marginalizedGroups.includes('pregnant')) healthStatus = 'Prenatal Care'
+      else if (marginalizedGroups.includes('senior')) healthStatus = 'Senior Care'
       else if (bmi < 18.5 || bmi >= 30) healthStatus = 'Monitor'
 
       setHealthInfo({

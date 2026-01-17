@@ -17,6 +17,7 @@ interface MedicineReleased {
   previousQuantity: number
   newQuantity: number
   createdAt: Date
+  barangay?: string
 }
 
 export default function ReleasedMedicinesPage() {
@@ -44,7 +45,8 @@ export default function ReleasedMedicinesPage() {
           id: doc.id,
           ...data,
           releaseDate: data.releaseDate?.toDate?.() || (data.releaseDate instanceof Date ? data.releaseDate : new Date(data.releaseDate)),
-          createdAt: data.createdAt?.toDate?.() || data.createdAt
+          createdAt: data.createdAt?.toDate?.() || data.createdAt,
+          barangay: data.barangay || ''
         } as MedicineReleased
         
         releasedData.push(released)
@@ -100,7 +102,7 @@ export default function ReleasedMedicinesPage() {
         <div className="card-body p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search Input */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs mb-2">Search</span>
               </label>
@@ -114,7 +116,7 @@ export default function ReleasedMedicinesPage() {
             </div>
 
             {/* Date Filter */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs mb-2">Filter by Release Date</span>
               </label>
@@ -161,6 +163,7 @@ export default function ReleasedMedicinesPage() {
                     <th>Medicine Code</th>
                     <th>Medicine Name</th>
                     <th>Amount Released</th>
+                    <th>Barangay</th>
                     <th>Previous Quantity</th>
                     <th>New Quantity</th>
                     <th>Remarks</th>
@@ -191,6 +194,11 @@ export default function ReleasedMedicinesPage() {
                         <span className="font-bold text-primary">
                           {released.amount}
                         </span>
+                      </td>
+                      <td>
+                        <div className="font-medium">
+                          {released.barangay || 'N/A'}
+                        </div>
                       </td>
                       <td>
                         <span className="font-medium">

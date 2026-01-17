@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 import { useAccountStore } from '@/store/accountStore'
+import { getAgeBasedStatus, getAgeDisplay } from '@/lib/ageUtils'
 
 function StatCard({ label, value, color }: { label: string; value: number | string; color: 'primary' | 'secondary' | 'accent' | 'info' | 'success' | 'warning' | 'error' }) {
   return (
@@ -180,62 +181,6 @@ function MonthCalendar({
   )
 }
 
-// Helper function to calculate age in months
-function getAgeInMonths(birthDate: Date): number {
-  const today = new Date()
-  const years = today.getFullYear() - birthDate.getFullYear()
-  const months = today.getMonth() - birthDate.getMonth()
-  const days = today.getDate() - birthDate.getDate()
-  
-  let totalMonths = years * 12 + months
-  if (days < 0) totalMonths--
-  
-  return Math.max(0, totalMonths)
-}
-
-// Helper function to get age-based status
-function getAgeBasedStatus(birthDate: Date | undefined, originalStatus: string): string {
-  if (!birthDate || !(birthDate instanceof Date)) return originalStatus
-  
-  // Don't override pwd or pregnant status
-  if (originalStatus === 'pwd' || originalStatus === 'pregnant') {
-    return originalStatus
-  }
-  
-  const months = getAgeInMonths(birthDate)
-  const years = Math.floor(months / 12)
-  
-  if (months < 2) {
-    return 'newborn'
-  } else if (months < 12) {
-    return 'infant'
-  } else if (years < 4) {
-    return 'toddler'
-  } else if (years < 18) {
-    return 'child'
-  } else if (years < 65) {
-    return 'adult'
-  } else {
-    return 'senior'
-  }
-}
-
-// Helper function to calculate age display
-function getAgeDisplay(birthDate: Date | undefined): string {
-  if (!birthDate || !(birthDate instanceof Date)) return ''
-  
-  const months = getAgeInMonths(birthDate)
-  const years = Math.floor(months / 12)
-  
-  if (months < 12) {
-    return `${months} mo`
-  } else if (years < 4) {
-    return `${years} yr`
-  } else {
-    return `${years} yr`
-  }
-}
-
 export default function AdminDashboardPage() {
   const { account } = useAccountStore()
   const stats = useAdminDashboard()
@@ -369,7 +314,7 @@ export default function AdminDashboardPage() {
               stats.recentResidents.map((r) => {
                 const birth = r.birthDate instanceof Date ? r.birthDate : undefined
                 const ageDisplay = getAgeDisplay(birth)
-                const displayStatus = getAgeBasedStatus(birth, r.status)
+                const displayStatus = getAgeBasedStatus(birth, r.marginalizedGroup?.find(g => ['child', 'adult', 'senior', 'pwd', 'pregnant'].includes(g)) || '')
                 return (
                   <div key={r.id} className="bg-base-200 rounded-lg p-4 space-y-2">
                     <div className="flex items-center justify-between">
@@ -411,13 +356,14 @@ export default function AdminDashboardPage() {
                   <th>Gender</th>
                   <th>Date of Birth</th>
                   <th>Status</th>
+                  <th>Marginalized Group</th>
                 </tr>
               </thead>
               <tbody>
                 {stats.recentResidents.map((r) => {
                   const birth = r.birthDate instanceof Date ? r.birthDate : undefined
                   const ageDisplay = getAgeDisplay(birth)
-                  const displayStatus = getAgeBasedStatus(birth, r.status)
+                  const displayStatus = getAgeBasedStatus(birth, r.marginalizedGroup?.find(g => ['child', 'adult', 'senior', 'pwd', 'pregnant'].includes(g)) || '')
                   return (
                     <tr key={r.id} className="text-xs font-medium text-zinc-500">
                       <td>{ageDisplay}</td>
@@ -426,12 +372,29 @@ export default function AdminDashboardPage() {
                       <td className="capitalize">{r.gender}</td>
                       <td>{birth ? birth.toLocaleDateString() : ''}</td>
                       <td><StatusBadge status={displayStatus} size="xs" /></td>
+                      <td>
+                        <div className="flex flex-wrap gap-1">
+                          {r.marginalizedGroup && r.marginalizedGroup.length > 0 ? (
+                            r.marginalizedGroup.map((group) => (
+                              <span
+                                key={group}
+                                className="badge badge-sm badge-outline"
+                                title={group}
+                              >
+                                {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   )
                 })}
                 {stats.recentResidents.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center text-sm text-gray-500 py-6">No residents found</td>
+                    <td colSpan={7} className="text-center text-sm text-gray-500 py-6">No residents found</td>
                   </tr>
                 )}
               </tbody>

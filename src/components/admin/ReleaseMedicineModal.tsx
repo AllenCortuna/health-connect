@@ -163,10 +163,10 @@ export default function ReleaseMedicineModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="form-control">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-control flex flex-col">
             <label className="label">
-              <span className="label-text font-semibold">Amount to Release *</span>
+              <span className="label-text font-semibold">Quantity to Release *</span>
             </label>
             <input
               type="number"
@@ -176,7 +176,7 @@ export default function ReleaseMedicineModal({
                 if (errors.amount) setErrors(prev => ({ ...prev, amount: '' }))
               }}
               className={`input input-bordered ${errors.amount ? 'input-error' : ''}`}
-              placeholder="Enter amount"
+              placeholder="Enter quantity to release"
               min="1"
               max={medicine.quantity}
               disabled={isReleasing || isExpired}
@@ -189,7 +189,7 @@ export default function ReleaseMedicineModal({
             </span>
           </div>
 
-          <div className="form-control">
+          <div className="form-control flex flex-col">
             <label className="label">
               <span className="label-text font-semibold">Release Date *</span>
             </label>
@@ -209,7 +209,7 @@ export default function ReleaseMedicineModal({
             )}
           </div>
 
-          <div className="form-control">
+          <div className="form-control flex flex-col">
             <label className="label">
               <span className="label-text font-semibold">Barangay *</span>
             </label>
@@ -236,7 +236,7 @@ export default function ReleaseMedicineModal({
             )}
           </div>
 
-          <div className="form-control">
+          <div className="form-control flex flex-col">
             <label className="label">
               <span className="label-text font-semibold">Remarks</span>
             </label>

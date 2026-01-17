@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { constructFullName } from '@/lib/objects'
 import { FaTrash, FaEdit } from 'react-icons/fa'
 import Link from 'next/link'
-import StatusBadge from '@/components/common/StatusBadge'
+import { getStatusFromAge } from '@/lib/ageUtils'
 
 const EditHouseholdMember = () => {
   const router = useRouter()
@@ -32,7 +32,7 @@ const EditHouseholdMember = () => {
     birthPlace: '',
     address: '',
     gender: 'male',
-    status: 'adult',
+    marginalizedGroup: [],
     contactNumber: '',
     email: '',
     height: undefined,
@@ -192,6 +192,19 @@ const EditHouseholdMember = () => {
     }
   }
 
+  const handleMarginalizedGroupChange = (value: string, checked: boolean) => {
+    setFormData(prev => {
+      const currentGroups = prev.marginalizedGroup || []
+      const updatedGroups = checked
+        ? [...currentGroups, value]
+        : currentGroups.filter(g => g !== value)
+      return {
+        ...prev,
+        marginalizedGroup: updatedGroups
+      }
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -203,12 +216,25 @@ const EditHouseholdMember = () => {
     setIsLoading(true)
     
     try {
+      // Auto-add age-based status to marginalizedGroup if not already present
+      const parsedBirthDate = new Date(formData.birthDate as string)
+      const ageStatus = getStatusFromAge(parsedBirthDate)
+      const marginalizedGroup = [...(formData.marginalizedGroup || [])]
+      
+      // Add age-based status if not already in the array
+      if (!marginalizedGroup.includes(ageStatus)) {
+        marginalizedGroup.push(ageStatus)
+      }
+
       const residentData = {
         ...formData,
         householdId: householdNumber,
+        marginalizedGroup,
+        role: 'household' as const,
+        activeStatus: true,
         createdAt: serverTimestamp(),
         fullName: constructFullName(formData.firstName || '', formData.middleName, formData.lastName || '', formData.suffix),
-        birthDate: new Date(formData.birthDate as string)
+        birthDate: parsedBirthDate
       }
 
       await addDoc(collection(db, 'resident'), residentData)
@@ -226,7 +252,7 @@ const EditHouseholdMember = () => {
         birthPlace: '',
         address: '',
         gender: 'male',
-        status: 'adult',
+        marginalizedGroup: [],
         contactNumber: '',
         email: '',
         height: undefined,
@@ -459,19 +485,23 @@ const EditHouseholdMember = () => {
 
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold text-xs">Status *</span>
+                    <span className="label-text font-semibold text-xs">Marginalized Group</span>
                   </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    className="select select-bordered select-sm"
-                  >
-                    <option value="4ps">4ps</option>
-                    <option value="pwd">PWD</option>
-                    <option value="pregnant">Pregnant</option>
-                    <option value="IPs">IP&apos;s</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {['pwd', 'pregnant', 'IPs', '4ps'].map((group) => (
+                      <label key={group} className="label cursor-pointer justify-start gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.marginalizedGroup?.includes(group) || false}
+                          onChange={(e) => handleMarginalizedGroupChange(group, e.target.checked)}
+                          className="checkbox checkbox-primary checkbox-sm"
+                        />
+                        <span className="label-text text-xs capitalize">
+                          {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -640,8 +670,22 @@ const EditHouseholdMember = () => {
                           <h3 className="font-semibold text-sm">{resident.fullName}</h3>
                           <p className="text-xs text-gray-600">Family Number: {resident.familyNo}</p>
                           <div className="flex items-center gap-2 mt-2">
-                            <StatusBadge status={resident.status} size="xs" />
                             <span className="text-xs capitalize">{resident.gender}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {resident.marginalizedGroup && resident.marginalizedGroup.length > 0 ? (
+                              resident.marginalizedGroup.map((group) => (
+                                <span
+                                  key={group}
+                                  className="badge badge-sm badge-outline"
+                                  title={group}
+                                >
+                                  {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

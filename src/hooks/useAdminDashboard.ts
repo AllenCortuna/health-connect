@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { collection, getCountFromServer, getDocs, orderBy, query, where, Timestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Resident } from '@/interface/user'
+import { getAgeInMonths, getAgeCategory } from '@/lib/ageUtils'
 
 export interface AdminDashboardStats {
   totalPopulation: number
@@ -21,40 +22,6 @@ export interface AdminDashboardStats {
   hasError: boolean
 }
 
-// Helper function to calculate age in months
-function getAgeInMonths(birthDate: Date): number {
-  const today = new Date()
-  const years = today.getFullYear() - birthDate.getFullYear()
-  const months = today.getMonth() - birthDate.getMonth()
-  const days = today.getDate() - birthDate.getDate()
-  
-  let totalMonths = years * 12 + months
-  if (days < 0) totalMonths--
-  
-  return Math.max(0, totalMonths)
-}
-
-// Helper function to get age category
-function getAgeCategory(birthDate: Date | undefined): string | null {
-  if (!birthDate || !(birthDate instanceof Date)) return null
-  
-  const months = getAgeInMonths(birthDate)
-  const years = Math.floor(months / 12)
-  
-  if (months < 2) {
-    return 'newborn'
-  } else if (months < 12) {
-    return 'infant'
-  } else if (years < 4) {
-    return 'toddler'
-  } else if (years < 18) {
-    return 'child'
-  } else if (years < 65) {
-    return 'adult'
-  } else {
-    return 'senior'
-  }
-}
 
 function useAdminDashboard(): AdminDashboardStats {
   const [state, setState] = useState<Omit<AdminDashboardStats, 'isLoading' | 'hasError'> | null>(null)

@@ -8,29 +8,7 @@ import type { Resident } from '@/interface/user'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FaArrowLeft, FaSave } from 'react-icons/fa'
 import { constructFullName } from '@/lib/objects'
-
-// Helper: calculate age in months
-function getAgeInMonthsResident(birthDate: Date): number {
-  const today = new Date()
-  const years = today.getFullYear() - birthDate.getFullYear()
-  const months = today.getMonth() - birthDate.getMonth()
-  const days = today.getDate() - birthDate.getDate()
-
-  let totalMonths = years * 12 + months
-  if (days < 0) totalMonths--
-  return Math.max(0, totalMonths)
-}
-
-// Helper: map age to Resident.status bucket using newborn/infant/toddler breakpoints
-function getStatusFromAge(birthDate: Date): Resident['status'] {
-  const months = getAgeInMonthsResident(birthDate)
-  const years = Math.floor(months / 12)
-
-  // NEWBORN (0–2 mo), INFANT (2 mo–1 yr), TODDLER (1–4 yr) → overall "child" bucket
-  if (years < 18) return 'child'
-  if (years < 65) return 'adult'
-  return 'senior'
-}
+import { getStatusFromAge } from '@/lib/ageUtils'
 
 const EditResident = () => {
   const router = useRouter()
@@ -50,7 +28,8 @@ const EditResident = () => {
     birthPlace: '',
     address: '',
     gender: 'male',
-    status: 'adult',
+    marginalizedGroup: [],
+    activeStatus: true,
     contactNumber: '',
     email: '',
     height: undefined,
@@ -102,7 +81,8 @@ const EditResident = () => {
           birthPlace: residentData.birthPlace || '',
           address: residentData.address || '',
           gender: residentData.gender || 'male',
-          status: residentData.status || 'adult',
+          marginalizedGroup: residentData.marginalizedGroup || [],
+          activeStatus: residentData.activeStatus !== undefined ? residentData.activeStatus : true,
           contactNumber: residentData.contactNumber || '',
           email: residentData.email || '',
           height: residentData.height,
@@ -155,10 +135,12 @@ const EditResident = () => {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
+    
     const updatedFormData = {
       ...formData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }
     
     // Update full name when name fields change
@@ -179,6 +161,19 @@ const EditResident = () => {
     }
   }
 
+  const handleMarginalizedGroupChange = (value: string, checked: boolean) => {
+    setFormData(prev => {
+      const currentGroups = prev.marginalizedGroup || []
+      const updatedGroups = checked
+        ? [...currentGroups, value]
+        : currentGroups.filter(g => g !== value)
+      return {
+        ...prev,
+        marginalizedGroup: updatedGroups
+      }
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -197,13 +192,18 @@ const EditResident = () => {
         return
       }
 
-      // Auto-derive status from age unless explicitly marked as PWD or Pregnant
-      const status = getStatusFromAge(parsedBirthDate)
+      // Auto-add age-based status to marginalizedGroup if not already present
+      const ageStatus = getStatusFromAge(parsedBirthDate)
+      const marginalizedGroup = [...(formData.marginalizedGroup || [])]
       
+      // Add age-based status if not already in the array
+      if (!marginalizedGroup.includes(ageStatus)) {
+        marginalizedGroup.push(ageStatus)
+      }
 
       const updateData = {
         ...formData,
-        status,
+        marginalizedGroup,
         fullName: constructFullName(formData.firstName || '', formData.middleName, formData.lastName || '', formData.suffix),
         birthDate: parsedBirthDate
       }
@@ -244,7 +244,7 @@ const EditResident = () => {
         <div className="text-center">
           <p className="text-error">Resident not found</p>
           <button
-            onClick={() => router.push('/bhw/resident')}
+            onClick={() => router.back()}
             className="btn btn-secondary mt-4"
           >
             Back to Residents
@@ -258,7 +258,7 @@ const EditResident = () => {
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => router.push('/bhw/resident')}
+          onClick={() => router.back()}
           className="btn btn-ghost btn-sm"
         >
           <FaArrowLeft className="mr-2" />
@@ -381,23 +381,43 @@ const EditResident = () => {
                 {errors.birthPlace && <span className="label-text-alt text-error">{errors.birthPlace}</span>}
               </div>
 
-              <div className="form-control flex flex-col">
+              <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold text-xs">Status *</span>
+                  <span className="label-text font-semibold text-xs">Marginalized Group</span>
                 </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="select select-bordered"
-                >
-                  <option value="child">Child</option>
-                  <option value="adult">Adult</option>
-                  <option value="senior">Senior</option>
-                  <option value="pwd">PWD</option>
-                  <option value="pregnant">Pregnant</option>
-                </select>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                  {['pwd', 'pregnant', 'IPs', '4ps'].map((group) => (
+                    <label key={group} className="label cursor-pointer justify-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.marginalizedGroup?.includes(group) || false}
+                        onChange={(e) => handleMarginalizedGroupChange(group, e.target.checked)}
+                        className="checkbox checkbox-primary checkbox-sm"
+                      />
+                      <span className="label-text text-xs capitalize">
+                        {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
+            </div>
+
+            {/* Active Status Toggle */}
+            <div className="form-control">
+              <label className="label cursor-pointer justify-start gap-4">
+                <span className="label-text font-semibold text-xs">Active Status</span>
+                <input
+                  type="checkbox"
+                  name="activeStatus"
+                  checked={formData.activeStatus || false}
+                  onChange={handleInputChange}
+                  className="toggle toggle-primary"
+                />
+                <span className="label-text text-xs text-gray-500">
+                  {formData.activeStatus ? 'Active' : 'Inactive'}
+                </span>
+              </label>
             </div>
 
             {/* Contact Information */}

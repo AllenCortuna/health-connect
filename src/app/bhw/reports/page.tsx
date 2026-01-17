@@ -146,7 +146,7 @@ const ReportsPage = () => {
                     style={{ transitionDelay: '450ms' }}
                 >
                     <button
-                        onClick={() => router.back()}
+                        onClick={() => router.push('/bhw/dashboard')}
                         className="group flex items-center gap-2 px-4 py-2 text-sm font-semibold text-zinc-600 hover:text-primary bg-white border hover:shadow-lg hover:shadow-primary/50 border-zinc-300 hover:border-primary/50 shadow-sm transition-all duration-300"
                     >
                         <FaChevronLeft className="text-xs group-hover:-translate-x-1 transition-transform duration-300" />
