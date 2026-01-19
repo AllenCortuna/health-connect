@@ -99,7 +99,8 @@ const Resident = () => {
     
     // Use marginalizedGroup for filtering, or derive from age if not present
     const marginalizedGroups = resident.marginalizedGroup || []
-    const ageStatus = getAgeBasedStatus(resident.birthDate, marginalizedGroups.find(g => ['child', 'adult', 'senior', 'pwd', 'pregnant'].includes(g)) || '')
+    const savedAgeGroup = marginalizedGroups.find(g => ['child', 'adult', 'senior'].includes(g)) || ''
+    const ageStatus = getAgeBasedStatus(resident.birthDate, savedAgeGroup)
     const allGroups = [...marginalizedGroups]
     if (!allGroups.includes(ageStatus)) {
       allGroups.push(ageStatus)
@@ -138,7 +139,7 @@ const Resident = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by name or family number..."
+                placeholder="Search by name or household number"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"
@@ -241,19 +242,37 @@ const Resident = () => {
                       </td>
                       <td>
                         <div className="flex flex-wrap gap-1">
-                          {resident.marginalizedGroup && resident.marginalizedGroup.length > 0 ? (
-                            resident.marginalizedGroup.map((group) => (
+                          {(() => {
+                            const hiddenGroups = new Set([
+                              'newborn',
+                              'infant',
+                              'toddler',
+                              'child',
+                              'adult',
+                              'senior',
+                            ])
+                            const displayGroups = (resident.marginalizedGroup || []).filter(
+                              (group) => !hiddenGroups.has(group)
+                            )
+
+                            if (displayGroups.length === 0) return <span className="text-xs text-gray-400">—</span>
+
+                            return displayGroups.map((group) => (
                               <span
                                 key={group}
                                 className="badge badge-sm badge-outline"
                                 title={group}
                               >
-                                {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                                {group === 'IPs'
+                                  ? "IP's"
+                                  : group === '4ps'
+                                    ? '4Ps'
+                                    : group === 'pwd'
+                                      ? 'PWD'
+                                      : group.charAt(0).toUpperCase() + group.slice(1)}
                               </span>
                             ))
-                          ) : (
-                            <span className="text-xs text-gray-400">—</span>
-                          )}
+                          })()}
                         </div>
                       </td>
                       <td>

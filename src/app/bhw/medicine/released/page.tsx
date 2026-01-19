@@ -157,7 +157,7 @@ export default function ReleasedMedicinesPage() {
         <div className="card-body p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search Input */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs mb-2">Search</span>
               </label>
@@ -171,7 +171,7 @@ export default function ReleasedMedicinesPage() {
             </div>
 
             {/* Date Filter */}
-            <div className="form-control">
+            <div className="form-control flex flex-col">
               <label className="label">
                 <span className="label-text font-semibold text-xs mb-2">Filter by Release Date</span>
               </label>

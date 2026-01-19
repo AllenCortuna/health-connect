@@ -219,7 +219,7 @@ export default function AdminAddMedicinePage() {
                 <input
                   type="number"
                   name="quantity"
-                  value={formData.quantity}
+                  value={formData.quantity || ''}
                   onChange={handleInputChange}
                   className={`input input-bordered ${errors.quantity ? 'input-error' : ''}`}
                   placeholder="Enter Quantity"

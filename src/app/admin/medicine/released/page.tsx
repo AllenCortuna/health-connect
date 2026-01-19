@@ -26,6 +26,7 @@ export default function ReleasedMedicinesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [dateFilter, setDateFilter] = useState<string>('')
+  const [barangayFilter, setBarangayFilter] = useState<string>('all')
 
   useEffect(() => {
     fetchReleasedMedicines()
@@ -70,9 +71,31 @@ export default function ReleasedMedicinesPage() {
     const matchesDate = dateFilter === '' || 
       (released.releaseDate instanceof Date && 
        released.releaseDate.toISOString().split('T')[0] === dateFilter)
+
+    const matchesBarangay =
+      barangayFilter === 'all' ||
+      (released.barangay || '').toLowerCase() === barangayFilter.toLowerCase()
     
-    return matchesSearch && matchesDate
+    return matchesSearch && matchesDate && matchesBarangay
   })
+
+  const barangayOptions = Array.from(
+    new Set(
+      releasedMedicines
+        .map((r) => (r.barangay || '').trim())
+        .filter((b) => b !== '')
+    )
+  ).sort()
+
+  const groupedByBarangay = filteredReleased.reduce<Record<string, MedicineReleased[]>>(
+    (acc, released) => {
+      const key = (released.barangay || 'Unspecified').trim() || 'Unspecified'
+      if (!acc[key]) acc[key] = []
+      acc[key].push(released)
+      return acc
+    },
+    {}
+  )
 
   if (isLoading) {
     return (
@@ -127,6 +150,25 @@ export default function ReleasedMedicinesPage() {
                 className="input input-bordered input-sm"
               />
             </div>
+
+            {/* Barangay Filter */}
+            <div className="form-control flex flex-col">
+              <label className="label">
+                <span className="label-text font-semibold text-xs mb-2">Filter by Barangay</span>
+              </label>
+              <select
+                value={barangayFilter}
+                onChange={(e) => setBarangayFilter(e.target.value)}
+                className="select select-bordered select-sm"
+              >
+                <option value="all">All Barangays</option>
+                {barangayOptions.map((bgy) => (
+                  <option key={bgy} value={bgy}>
+                    {bgy}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -171,59 +213,70 @@ export default function ReleasedMedicinesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredReleased.map((released) => (
-                    <tr key={released.id} className="hover text-xs font-medium text-zinc-500">
-                      <td>
-                        <div className="font-medium">
-                          {released.releaseDate instanceof Date 
-                            ? released.releaseDate.toLocaleDateString() 
-                            : 'N/A'}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="font-medium">
-                          {released.medicineCode}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="font-semibold text-zinc-600">
-                          {released.medicineName}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="font-bold text-primary">
-                          {released.amount}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="font-medium">
-                          {released.barangay || 'N/A'}
-                        </div>
-                      </td>
-                      <td>
-                        <span className="font-medium">
-                          {released.previousQuantity}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`font-medium ${released.newQuantity <= 10 ? 'text-error' : released.newQuantity <= 50 ? 'text-warning' : 'text-success'}`}>
-                          {released.newQuantity}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="max-w-xs truncate" title={released.remarks || 'No remarks'}>
-                          {released.remarks || '—'}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="text-xs text-gray-500">
-                          {released.createdAt instanceof Date 
-                            ? released.createdAt.toLocaleString() 
-                            : 'N/A'}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {Object.entries(groupedByBarangay)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([barangay, rows]) => (
+                      <React.Fragment key={barangay}>
+                        <tr className="bg-base-200">
+                          <td colSpan={9} className="text-xs font-semibold text-secondary uppercase">
+                            {barangay}
+                          </td>
+                        </tr>
+                        {rows.map((released) => (
+                          <tr key={released.id} className="hover text-xs font-medium text-zinc-500">
+                            <td>
+                              <div className="font-medium">
+                                {released.releaseDate instanceof Date 
+                                  ? released.releaseDate.toLocaleDateString() 
+                                  : 'N/A'}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="font-medium">
+                                {released.medicineCode}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="font-semibold text-zinc-600">
+                                {released.medicineName}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="font-bold text-primary">
+                                {released.amount}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="font-medium">
+                                {released.barangay || 'N/A'}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="font-medium">
+                                {released.previousQuantity}
+                              </span>
+                            </td>
+                            <td>
+                              <span className={`font-medium ${released.newQuantity <= 10 ? 'text-error' : released.newQuantity <= 50 ? 'text-warning' : 'text-success'}`}>
+                                {released.newQuantity}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="max-w-xs truncate" title={released.remarks || 'No remarks'}>
+                                {released.remarks || '—'}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="text-xs text-gray-500">
+                                {released.createdAt instanceof Date 
+                                  ? released.createdAt.toLocaleString() 
+                                  : 'N/A'}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
                 </tbody>
               </table>
             </div>

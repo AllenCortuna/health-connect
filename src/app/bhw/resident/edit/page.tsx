@@ -547,7 +547,7 @@ const EditResident = () => {
             <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
-                onClick={() => router.push('/bhw/resident')}
+                onClick={() => router.back()}
                 className="btn btn-outline btn-secondary"
                 disabled={isSaving}
               >

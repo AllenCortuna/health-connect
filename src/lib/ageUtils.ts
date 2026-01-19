@@ -45,7 +45,7 @@ export function getAgeBasedStatus(birthDate: Date | undefined, originalStatus: s
     return 'toddler'
   } else if (years < 18) {
     return 'child'
-  } else if (years < 65) {
+  } else if (years < 60) {
     return 'adult'
   } else {
     return 'senior'
@@ -71,7 +71,7 @@ export function getAgeCategory(birthDate: Date | undefined): string | null {
     return 'toddler'
   } else if (years < 18) {
     return 'child'
-  } else if (years < 65) {
+  } else if (years < 60) {
     return 'adult'
   } else {
     return 'senior'
@@ -89,7 +89,7 @@ export function getStatusFromAge(birthDate: Date): 'child' | 'adult' | 'senior' 
   const years = Math.floor(months / 12)
   
   if (years < 18) return 'child'
-  if (years < 65) return 'adult'
+  if (years < 60) return 'adult'
   return 'senior'
 }
 
