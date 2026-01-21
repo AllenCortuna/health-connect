@@ -494,7 +494,6 @@ const Medicine = () => {
                     <tr key={medicine.id} className="hover text-xs font-medium text-zinc-500">
                       <td>
                               <div className="pl-6 font-medium">
-                          {medicine.medCode}
                         </div>
                       </td>
                       <td>
