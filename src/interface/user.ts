@@ -52,6 +52,7 @@ export interface Resident {
     bloodType?: string;
     houseNo?: string;
     spouseName?: string;
+    totalFamilyMembers?: number;
 }
 
 export interface BHW{

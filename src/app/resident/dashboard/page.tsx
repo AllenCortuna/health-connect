@@ -314,14 +314,19 @@ const Dashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-
         <div className="stat bg-secondary text-secondary-content rounded-lg">
           <div className="stat-figure text-secondary-content">
             <HiBell className="w-8 h-8" />
           </div>
           <div className="stat-title text-secondary-content">Upcoming Events</div>
           <div className="stat-value text-secondary-content">{upcomingAnnouncements.length}</div>
-          <div className="stat-desc text-secondary-content">Events to be held</div>
+        </div>
+        <div className="stat bg-secondary text-secondary-content rounded-lg">
+          <div className="stat-figure text-secondary-content">
+            <HiBell className="w-8 h-8" />
+          </div>
+          <div className="stat-title text-secondary-content">Total Family Members</div>
+          <div className="stat-value text-secondary-content">{residentData?.totalFamilyMembers ?? 0}</div>
         </div>
       </div>
 

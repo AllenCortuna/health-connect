@@ -95,8 +95,7 @@ const Resident = () => {
   // Filter and search residents
   const filteredResidents = residents.filter((resident) => {
     const matchesSearch = searchTerm === '' || 
-      resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
+      resident.fullName.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesFamily = familyFilter === 'all' || resident.familyNo === familyFilter
     
@@ -139,7 +138,7 @@ const Resident = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by name or ID number..."
+                placeholder="Search by name"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"

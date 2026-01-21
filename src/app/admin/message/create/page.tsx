@@ -253,7 +253,7 @@ const CreateMessage = () => {
             
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold">Search {messageType === 'resident' ? 'Resident' : 'BHW'}</span>
+                <span className="label-text font-semibold">Search {messageType === 'resident' ? 'Household' : 'BHW'}</span>
               </label>
               <div className="relative">
                 <input

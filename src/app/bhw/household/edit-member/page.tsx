@@ -368,7 +368,6 @@ const EditHouseholdMember = () => {
                     className="input input-bordered input-sm"
                     placeholder="Enter Family Number"
                     min="1"
-                    max={householdInfo?.totalFamily}
                   />
                 </div>
               </div>

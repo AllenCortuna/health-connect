@@ -202,7 +202,6 @@ export default function ReleasedMedicinesPage() {
               <table className="table table-zebra w-full">
                 <thead>
                   <tr>
-                    <th>Date Released</th>
                     <th>Medicine Code</th>
                     <th>Medicine Name</th>
                     <th>Amount Released</th>
@@ -215,13 +214,6 @@ export default function ReleasedMedicinesPage() {
                 <tbody>
                   {filteredReleased.map((released) => (
                     <tr key={released.id} className="hover text-xs font-medium text-zinc-500">
-                      <td>
-                        <div className="font-medium">
-                          {released.releaseDate instanceof Date 
-                            ? released.releaseDate.toLocaleDateString() 
-                            : 'N/A'}
-                        </div>
-                      </td>
                       <td>
                         <div className="font-medium">
                           {released.medicineCode}

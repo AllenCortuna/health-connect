@@ -138,6 +138,15 @@ export function useResidentDashboard() {
           createdAt: residentDoc.data().createdAt?.toDate?.() || new Date(residentDoc.data().createdAt)
         } as Resident
         
+        // Calculate total family members
+        if (residentData.householdId) {
+          const familyQuery = query(residentsRef, where('householdId', '==', residentData.householdId))
+          const familySnapshot = await getDocs(familyQuery)
+          residentData.totalFamilyMembers = familySnapshot.size
+        } else {
+          residentData.totalFamilyMembers = 0
+        }
+        
         setResidentData(residentData)
         calculateHealthInfo(residentData)
       }
