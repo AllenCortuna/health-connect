@@ -169,19 +169,6 @@ export default function ReleasedMedicinesPage() {
                 className="input input-bordered input-sm"
               />
             </div>
-
-            {/* Date Filter */}
-            <div className="form-control flex flex-col">
-              <label className="label">
-                <span className="label-text font-semibold text-xs mb-2">Filter by Release Date</span>
-              </label>
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="input input-bordered input-sm"
-              />
-            </div>
           </div>
         </div>
       </div>

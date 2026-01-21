@@ -12,7 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   
   const primaryNavItems: NavigationItemProps[] = [
     { href: "/admin/dashboard", icon: HiHome, label: "Dashboard"},
-    { href: "/admin/resident", icon: HiUserGroup, label: "Resident"},
+    { href: "/admin/resident", icon: HiUserGroup, label: "Residents"},
     { href: "/admin/bhw", icon: HiUsers, label: "BHW"},
     { 
       href: "/admin/message", 

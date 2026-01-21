@@ -235,7 +235,7 @@ const CreateMessage = () => {
                     onChange={(e) => setMessageType(e.target.value as 'resident' | 'bhw')}
                     className="radio radio-xs radio-primary text-secondary"
                   />
-                  <span className="label-text ml-2">Resident</span>
+                  <span className="label-text ml-2">Household</span>
                 </label>
                 <label className="label cursor-pointer">
                   <input

@@ -386,7 +386,7 @@ const EditResident = () => {
                   <span className="label-text font-semibold text-xs">Marginalized Group</span>
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                  {['pwd', 'pregnant', 'IPs', '4ps'].map((group) => (
+                  {['pwd', 'pregnant', 'IPs', '4ps', 'solo parent'].map((group) => (
                     <label key={group} className="label cursor-pointer justify-start gap-2">
                       <input
                         type="checkbox"
@@ -395,7 +395,15 @@ const EditResident = () => {
                         className="checkbox checkbox-primary checkbox-sm"
                       />
                       <span className="label-text text-xs capitalize">
-                        {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group}
+                        {group === 'IPs'
+                          ? "IP's"
+                          : group === '4ps'
+                            ? '4Ps'
+                            : group === 'pwd'
+                              ? 'PWD'
+                              : group === 'solo parent'
+                                ? 'Solo Parent'
+                                : group}
                       </span>
                     </label>
                   ))}

@@ -4,10 +4,10 @@ export interface Medicine {
     quantity: number;
     expDate: Date;
     name: string;
-    description: string;
+    description?: string;
     medType: 'tablet' | 'capsule' | 'syrup' | 'inhaler' | 'ointment' | 'injection' | 'drops';
     category: string;
-    supplier: string;
+    dosageForm: string;
     barangay?: string; //barangay kung saan na release ang medicine
     status: 'available' | 'out of stock';
     createdAt: Date;

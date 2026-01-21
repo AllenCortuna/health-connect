@@ -488,7 +488,7 @@ const EditHouseholdMember = () => {
                     <span className="label-text font-semibold text-xs">Marginalized Group</span>
                   </label>
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    {['pwd', 'pregnant', 'IPs', '4ps'].map((group) => (
+                    {['pwd', 'pregnant', 'IPs', '4ps', 'solo parent'].map((group) => (
                       <label key={group} className="label cursor-pointer justify-start gap-2">
                         <input
                           type="checkbox"
@@ -497,7 +497,7 @@ const EditHouseholdMember = () => {
                           className="checkbox checkbox-primary checkbox-sm"
                         />
                         <span className="label-text text-xs capitalize">
-                          {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group}
+                          {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group === 'solo parent' ? 'Solo Parent' : group}
                         </span>
                       </label>
                     ))}
@@ -509,7 +509,7 @@ const EditHouseholdMember = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold text-xs">Email</span>
+                    <span className="label-text font-semibold text-xs">Email (Optional)</span>
                   </label>
                   <input
                     type="email"
@@ -680,7 +680,15 @@ const EditHouseholdMember = () => {
                                   className="badge badge-sm badge-outline"
                                   title={group}
                                 >
-                                  {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                                  {group === 'IPs'
+                                    ? "IP's"
+                                    : group === '4ps'
+                                      ? '4Ps'
+                                      : group === 'pwd'
+                                        ? 'PWD'
+                                        : group === 'solo parent'
+                                          ? 'Solo Parent'
+                                          : group.charAt(0).toUpperCase() + group.slice(1)}
                                 </span>
                               ))
                             ) : (

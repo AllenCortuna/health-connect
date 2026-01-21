@@ -236,8 +236,7 @@ const Medicine = () => {
   const filteredMedicines = medicines.filter((medicine) => {
     const matchesSearch = searchTerm === '' || 
       medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      medicine.medCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      medicine.description.toLowerCase().includes(searchTerm.toLowerCase())
+      medicine.medCode.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || medicine.status === statusFilter
     const matchesType = typeFilter === 'all' || medicine.medType === typeFilter

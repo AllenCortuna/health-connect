@@ -94,18 +94,13 @@ const Resident = () => {
   // Filter and search residents
   const filteredResidents = residents.filter((resident) => {
     const matchesSearch = searchTerm === '' || 
-      resident.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.familyNo.toLowerCase().includes(searchTerm.toLowerCase())
+      resident.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resident.familyNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resident.householdId?.toLowerCase().includes(searchTerm.toLowerCase())
     
-    // Use marginalizedGroup for filtering, or derive from age if not present
-    const marginalizedGroups = resident.marginalizedGroup || []
-    const savedAgeGroup = marginalizedGroups.find(g => ['child', 'adult', 'senior'].includes(g)) || ''
-    const ageStatus = getAgeBasedStatus(resident.birthDate, savedAgeGroup)
-    const allGroups = [...marginalizedGroups]
-    if (!allGroups.includes(ageStatus)) {
-      allGroups.push(ageStatus)
-    }
-    const matchesStatus = statusFilter === 'all' || allGroups.includes(statusFilter)
+    // Status filter is age-based only (newborn/infant/toddler/child/adult/senior)
+    const ageStatus = getAgeBasedStatus(resident.birthDate, '')
+    const matchesStatus = statusFilter === 'all' || ageStatus === statusFilter
     
     return matchesSearch && matchesStatus
   })
@@ -163,8 +158,6 @@ const Resident = () => {
                 <option value="child">Child</option>
                 <option value="adult">Adult</option>
                 <option value="senior">Senior</option>
-                <option value="pwd">PWD</option>
-                <option value="pregnant">Pregnant</option>
               </select>
             </div>
           </div>

@@ -374,19 +374,33 @@ export default function AdminDashboardPage() {
                       <td><StatusBadge status={displayStatus} size="xs" /></td>
                       <td>
                         <div className="flex flex-wrap gap-1">
-                          {r.marginalizedGroup && r.marginalizedGroup.length > 0 ? (
-                            r.marginalizedGroup.map((group) => (
+                          {(() => {
+                            const hiddenStatusValues = new Set(['child', 'adult', 'senior', 'pregnant', 'pwd'])
+                            const displayGroups = (r.marginalizedGroup ?? []).filter((group) => {
+                              const normalized = group.trim().toLowerCase()
+                              return normalized !== '' && !hiddenStatusValues.has(normalized)
+                            })
+
+                            if (displayGroups.length === 0) return <span className="text-xs text-gray-400">—</span>
+
+                            return displayGroups.map((group, index) => (
                               <span
-                                key={group}
+                                key={`${group}-${index}`}
                                 className="badge badge-sm badge-outline"
                                 title={group}
                               >
-                                {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                                {group === 'IPs'
+                                  ? "IP's"
+                                  : group === '4ps'
+                                    ? '4Ps'
+                                    : group === 'pwd'
+                                      ? 'PWD'
+                                      : group === 'solo parent'
+                                        ? 'Solo Parent'
+                                        : group.charAt(0).toUpperCase() + group.slice(1)}
                               </span>
                             ))
-                          ) : (
-                            <span className="text-xs text-gray-400">—</span>
-                          )}
+                          })()}
                         </div>
                       </td>
                     </tr>

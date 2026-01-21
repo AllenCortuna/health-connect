@@ -3,14 +3,13 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useAccountStore } from '@/store/accountStore'
 import { useResidentDashboard } from '@/hooks/useResidentDashboard'
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Announcement } from '@/interface/data'
 import AnnouncementModal from '@/components/admin/AnnouncementModal'
 import { 
   HiBell, 
   HiHeart,
-  HiUserGroup,
 } from 'react-icons/hi'
 import { HiChevronLeft, HiChevronRight } from 'react-icons/hi'
 
@@ -188,7 +187,6 @@ const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([])
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
-  const [totalFamilyMembers, setTotalFamilyMembers] = useState<number>(0)
 
   useEffect(() => {
     const fetchAllAnnouncements = async () => {
@@ -218,27 +216,6 @@ const Dashboard = () => {
 
     fetchAllAnnouncements()
   }, [])
-
-  useEffect(() => {
-    const fetchFamilyMembers = async () => {
-      if (!residentData?.familyNo) {
-        setTotalFamilyMembers(0)
-        return
-      }
-
-      try {
-        const residentsRef = collection(db, 'resident')
-        const q = query(residentsRef, where('familyNo', '==', residentData.familyNo))
-        const querySnapshot = await getDocs(q)
-        setTotalFamilyMembers(querySnapshot.size)
-      } catch (error) {
-        console.error('Error fetching family members:', error)
-        setTotalFamilyMembers(0)
-      }
-    }
-
-    fetchFamilyMembers()
-  }, [residentData?.familyNo])
 
   const handleDayClick = (day: number, fullDate: Date) => {
     setSelectedDate(fullDate)
@@ -317,7 +294,15 @@ const Dashboard = () => {
                       className="badge badge-sm badge-outline"
                       title={group}
                     >
-                      {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                      {group === 'IPs'
+                        ? "IP's"
+                        : group === '4ps'
+                          ? '4Ps'
+                          : group === 'pwd'
+                            ? 'PWD'
+                            : group === 'solo parent'
+                              ? 'Solo Parent'
+                              : group.charAt(0).toUpperCase() + group.slice(1)}
                     </span>
                   ))}
                 </div>
@@ -334,18 +319,9 @@ const Dashboard = () => {
           <div className="stat-figure text-secondary-content">
             <HiBell className="w-8 h-8" />
           </div>
-          <div className="stat-title text-secondary-content">Announcements</div>
+          <div className="stat-title text-secondary-content">Upcoming Events</div>
           <div className="stat-value text-secondary-content">{upcomingAnnouncements.length}</div>
-          <div className="stat-desc text-secondary-content">Upcoming events</div>
-        </div>
-
-        <div className="stat bg-accent text-accent-content rounded-lg">
-          <div className="stat-figure text-accent-content">
-            <HiUserGroup className="w-8 h-8" />
-          </div>
-          <div className="stat-title text-accent-content">Total Family Members</div>
-          <div className="stat-value text-accent-content">{totalFamilyMembers}</div>
-          <div className="stat-desc text-accent-content">Family size</div>
+          <div className="stat-desc text-secondary-content">Events to be held</div>
         </div>
       </div>
 

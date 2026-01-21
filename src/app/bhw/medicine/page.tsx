@@ -75,8 +75,7 @@ const Medicine = () => {
   const filteredMedicines = medicines.filter((medicine) => {
     const matchesSearch = searchTerm === '' || 
       medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      medicine.medCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      medicine.description.toLowerCase().includes(searchTerm.toLowerCase())
+      medicine.medCode.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = statusFilter === 'all' || medicine.status === statusFilter
     const matchesType = typeFilter === 'all' || medicine.medType === typeFilter
@@ -173,7 +172,7 @@ const Medicine = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by name, code, or description..."
+                placeholder="Search by name or code"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input input-bordered input-sm"

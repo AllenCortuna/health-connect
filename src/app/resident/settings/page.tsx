@@ -191,7 +191,15 @@ const Settings = () => {
                                 className="badge badge-sm badge-outline"
                                 title={group}
                               >
-                                {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                                {group === 'IPs'
+                                  ? "IP's"
+                                  : group === '4ps'
+                                    ? '4Ps'
+                                    : group === 'pwd'
+                                      ? 'PWD'
+                                      : group === 'solo parent'
+                                        ? 'Solo Parent'
+                                        : group.charAt(0).toUpperCase() + group.slice(1)}
                               </span>
                             ))
                           ) : (

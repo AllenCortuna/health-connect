@@ -1,7 +1,11 @@
-import React, { useRef } from 'react'
+ 'use client'
+
+import React, { useEffect, useRef, useState } from 'react'
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import type { Resident } from '@/interface/user'
 import { FaTimes, FaDownload } from 'react-icons/fa'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 interface ViewResidentModalProps {
   resident: Resident | null
@@ -69,7 +73,7 @@ const styles = StyleSheet.create({
 })
 
 // PDF Document Component
-const ResidentPDF = ({ resident }: { resident: Resident }) => {
+const ResidentPDF = ({ resident, householdHead }: { resident: Resident; householdHead?: string }) => {
   const formatDate = (date: Date | { toDate: () => Date } | undefined) => {
     if (!date) return 'N/A'
     if (typeof date === 'object' && 'toDate' in date) {
@@ -99,8 +103,18 @@ const ResidentPDF = ({ resident }: { resident: Resident }) => {
               <Text style={styles.value}>{resident.familyNo}</Text>
             </View>
             <View style={styles.column}>
+              <Text style={styles.label}>Household Number</Text>
+              <Text style={styles.value}>{resident.householdId || 'N/A'}</Text>
+            </View>
+          </View>
+          <View style={styles.row}>
+            <View style={styles.column}>
               <Text style={styles.label}>House Number</Text>
               <Text style={styles.value}>{resident.houseNo || 'N/A'}</Text>
+            </View>
+            <View style={styles.column}>
+              <Text style={styles.label}>Household Head</Text>
+              <Text style={styles.value}>{householdHead || 'N/A'}</Text>
             </View>
           </View>
         </View>
@@ -219,6 +233,36 @@ const ResidentPDF = ({ resident }: { resident: Resident }) => {
 
 const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen, onClose }) => {
   const printRef = useRef<HTMLDivElement>(null)
+  const [householdHead, setHouseholdHead] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchHouseholdHead = async () => {
+      if (!resident?.householdId) {
+        setHouseholdHead(null)
+        return
+      }
+
+      try {
+        const householdsRef = collection(db, 'household')
+        const q = query(householdsRef, where('householdNumber', '==', resident.householdId))
+        const snapshot = await getDocs(q)
+
+        if (!snapshot.empty) {
+          const data = snapshot.docs[0].data() as { headOfHousehold?: string }
+          setHouseholdHead(data.headOfHousehold || null)
+        } else {
+          setHouseholdHead(null)
+        }
+      } catch (error) {
+        console.error('Error fetching household head:', error)
+        setHouseholdHead(null)
+      }
+    }
+
+    if (isOpen && resident) {
+      fetchHouseholdHead()
+    }
+  }, [isOpen, resident])
 
   if (!isOpen || !resident) return null
 
@@ -240,7 +284,7 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
           <h3 className="font-bold text-lg text-secondary">Resident Information</h3>
           <div className="flex gap-2">
             <PDFDownloadLink
-              document={<ResidentPDF resident={resident} />}
+              document={<ResidentPDF resident={resident} householdHead={householdHead || undefined} />}
               fileName={`resident-${resident.firstName}-${resident.lastName}.pdf`}
               className="btn btn-sm btn-secondary"
             >
@@ -271,7 +315,7 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
           <div className="card bg-base-200">
             <div className="card-body p-4">
               <h4 className="card-title text-sm text-secondary mb-3">Basic Information</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="label">
                     <span className="label-text text-xs font-semibold">Family Number</span>
@@ -282,7 +326,13 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
                   <label className="label">
                     <span className="label-text text-xs font-semibold">House Number</span>
                   </label>
-                  <p className="text-sm">{resident.houseNo || 'N/A'}</p>
+                  <p className="text-sm">{resident.householdId || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="label">
+                    <span className="label-text text-xs font-semibold">Household Head</span>
+                  </label>
+                  <p className="text-sm">{householdHead || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -331,7 +381,15 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
                           className="badge badge-sm badge-outline"
                           title={group}
                         >
-                          {group === 'IPs' ? "IP's" : group === '4ps' ? '4Ps' : group === 'pwd' ? 'PWD' : group.charAt(0).toUpperCase() + group.slice(1)}
+                          {group === 'IPs'
+                            ? "IP's"
+                            : group === '4ps'
+                              ? '4Ps'
+                              : group === 'pwd'
+                                ? 'PWD'
+                                : group === 'solo parent'
+                                  ? 'Solo Parent'
+                                  : group.charAt(0).toUpperCase() + group.slice(1)}
                         </span>
                       ))}
                     </div>

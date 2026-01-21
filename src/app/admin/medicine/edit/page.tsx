@@ -24,7 +24,7 @@ export default function AdminEditMedicinePage() {
     description: '',
     medType: 'tablet',
     category: '',
-    supplier: '',
+    dosageForm: '',
     status: 'available'
   })
 
@@ -65,7 +65,7 @@ export default function AdminEditMedicinePage() {
           description: medicineData.description || '',
           medType: medicineData.medType || 'tablet',
           category: medicineData.category || '',
-          supplier: medicineData.supplier || '',
+          dosageForm: medicineData.dosageForm || (medicineData as unknown as { supplier?: string }).supplier || '',
           status: medicineData.status || 'available'
         })
       } else {
@@ -85,9 +85,9 @@ export default function AdminEditMedicinePage() {
     const newErrors: Record<string, string> = {}
     if (!formData.medCode?.trim()) newErrors.medCode = 'Medicine Code is required'
     if (!formData.name?.trim()) newErrors.name = 'Medicine Name is required'
-    if (!formData.description?.trim()) newErrors.description = 'Description is required'
+    // Description is optional
     if (!formData.category?.trim()) newErrors.category = 'Category is required'
-    if (!formData.supplier?.trim()) newErrors.supplier = 'Supplier is required'
+    if (!formData.dosageForm?.trim()) newErrors.dosageForm = 'Dosage form is required'
     if (!formData.quantity || formData.quantity <= 0) newErrors.quantity = 'Quantity must be greater than 0'
     if (formData.quantity && formData.quantity > 999999) newErrors.quantity = 'Quantity is too high'
 
@@ -231,7 +231,7 @@ export default function AdminEditMedicinePage() {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text font-semibold text-xs">Description *</span>
+                <span className="label-text font-semibold text-xs">Description (Optional)</span>
               </label>
               <textarea
                 name="description"
@@ -283,17 +283,17 @@ export default function AdminEditMedicinePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold text-xs">Supplier *</span>
+                  <span className="label-text font-semibold text-xs">Dosage Form *</span>
                 </label>
                 <input
                   type="text"
-                  name="supplier"
-                  value={formData.supplier}
+                  name="dosageForm"
+                  value={formData.dosageForm}
                   onChange={handleInputChange}
-                  className={`input input-bordered ${errors.supplier ? 'input-error' : ''}`}
-                  placeholder="Enter Supplier Name"
+                  className={`input input-bordered ${errors.dosageForm ? 'input-error' : ''}`}
+                  placeholder="e.g., 500mg tablet, 250mg/5mL syrup"
                 />
-                {errors.supplier && <span className="label-text-alt text-error">{errors.supplier}</span>}
+                {errors.dosageForm && <span className="label-text-alt text-error">{errors.dosageForm}</span>}
               </div>
 
               <div className="form-control flex flex-col">

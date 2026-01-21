@@ -134,8 +134,10 @@ const MedicinePDF = ({ medicine }: { medicine: Medicine }) => {
               <Text style={styles.value}>{medicine.status}</Text>
             </View>
             <View style={styles.column}>
-              <Text style={styles.label}>Supplier</Text>
-              <Text style={styles.value}>{medicine.supplier}</Text>
+              <Text style={styles.label}>Dosage Form</Text>
+              <Text style={styles.value}>
+                {medicine.dosageForm || (medicine as unknown as { supplier?: string }).supplier || 'N/A'}
+              </Text>
             </View>
           </View>
         </View>
@@ -286,9 +288,11 @@ const ViewMedicineModal: React.FC<ViewMedicineModalProps> = ({ medicine, isOpen,
                 </div>
                 <div>
                   <label className="label">
-                    <span className="label-text text-xs font-semibold">Supplier</span>
+                    <span className="label-text text-xs font-semibold">Dosage Form</span>
                   </label>
-                  <p className="text-sm">{medicine.supplier}</p>
+                  <p className="text-sm">
+                    {medicine.dosageForm || (medicine as unknown as { supplier?: string }).supplier || 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>

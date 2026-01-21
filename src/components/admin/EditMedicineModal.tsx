@@ -46,9 +46,7 @@ export default function EditMedicineModal({
       newErrors.medCode = 'Medicine Code is required'
     }
 
-    if (!description?.trim()) {
-      newErrors.description = 'Description is required'
-    }
+    // Description is optional
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -151,7 +149,7 @@ export default function EditMedicineModal({
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-semibold">Description *</span>
+              <span className="label-text font-semibold">Description (Optional)</span>
             </label>
             <textarea
               value={description}
