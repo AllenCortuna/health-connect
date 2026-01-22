@@ -1,13 +1,52 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, doc, where, writeBatch } from 'firebase/firestore'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { collection, getDocs, query, doc, where, writeBatch } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Household } from '@/interface/user'
 import { useRouter } from 'next/navigation'
 import { FaPlus, FaTrash, FaUsers, FaEdit } from 'react-icons/fa'
 import Link from 'next/link'
 import { successToast, errorToast } from '@/lib/toast'
+
+// Helper function to extract numeric part from household number (e.g., "BRGY7-16" -> 16)
+const getNumericPart = (householdNumber: string): number | null => {
+  // Try to extract number after the last hyphen
+  const parts = householdNumber.split('-')
+  if (parts.length > 1) {
+    const numPart = parts[parts.length - 1]
+    const num = parseInt(numPart, 10)
+    if (!isNaN(num)) {
+      return num
+    }
+  }
+  
+  // Try to parse the entire string as a number
+  const num = parseInt(householdNumber, 10)
+  if (!isNaN(num)) {
+    return num
+  }
+  
+  return null
+}
+
+// Helper function to sort households by household number
+const sortHouseholds = (a: Household, b: Household): number => {
+  const numA = getNumericPart(a.householdNumber)
+  const numB = getNumericPart(b.householdNumber)
+  
+  // If both have numeric parts, sort numerically
+  if (numA !== null && numB !== null) {
+    return numA - numB
+  }
+  
+  // If only one has a numeric part, prioritize it
+  if (numA !== null) return -1
+  if (numB !== null) return 1
+  
+  // Otherwise, sort alphabetically
+  return a.householdNumber.localeCompare(b.householdNumber)
+}
 
 const Household = () => {
   const router = useRouter()
@@ -19,28 +58,11 @@ const Household = () => {
   const [deletingResidentsCount, setDeletingResidentsCount] = useState(0)
   const [searchTerm, setSearchTerm] = useState('')
 
-  useEffect(() => {
-    fetchHouseholds()
-  }, [])
-
-  // Refresh households when page becomes visible (returning from other pages)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchHouseholds()
-      }
-    }
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [])
-
-  const fetchHouseholds = async () => {
+  const fetchHouseholds = useCallback(async () => {
     try {
       setIsLoading(true)
       const householdsRef = collection(db, 'household')
-      const q = query(householdsRef, orderBy('createdAt', 'desc'))
-      const querySnapshot = await getDocs(q)
+      const querySnapshot = await getDocs(householdsRef)
       
       const householdsData: Household[] = []
       querySnapshot.forEach((doc) => {
@@ -52,13 +74,32 @@ const Household = () => {
         } as Household)
       })
       
+      // Sort by household number in the frontend
+      householdsData.sort(sortHouseholds)
+      
       setHouseholds(householdsData)
     } catch (error) {
       console.error('Error fetching households:', error)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchHouseholds()
+  }, [fetchHouseholds])
+
+  // Refresh households when page becomes visible (returning from other pages)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchHouseholds()
+      }
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [fetchHouseholds])
 
   const openDeleteModal = (household: Household) => {
     setHouseholdToDelete(household)
@@ -110,15 +151,20 @@ const Household = () => {
     }
   }
 
-  // Filter households
-  const filteredHouseholds = households.filter((household) => {
-    const matchesSearch = searchTerm === '' || 
-      household.householdNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      household.headOfHousehold.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      household.address.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter and sort households
+  const filteredHouseholds = useMemo(() => {
+    const filtered = households.filter((household) => {
+      const matchesSearch = searchTerm === '' || 
+        household.householdNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        household.headOfHousehold.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        household.address.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      return matchesSearch
+    })
     
-    return matchesSearch
-  })
+    // Maintain sort order after filtering
+    return [...filtered].sort(sortHouseholds)
+  }, [households, searchTerm])
 
   if (isLoading) {
     return (

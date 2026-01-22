@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, doc, updateDoc, deleteDoc, where, getDoc } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase'
 import { useAccountStore } from '@/store/accountStore'
@@ -10,6 +10,7 @@ import { HiPlus, HiPaperClip } from 'react-icons/hi'
 import { HiMagnifyingGlass } from 'react-icons/hi2'
 import type { Message } from '@/interface/data'
 import ConversationModal from '@/components/bhw/ConversationModal'
+import type { Household, Resident, Account } from '@/interface/user'
 
 interface Conversation {
   partnerId: string
@@ -36,25 +37,13 @@ const Messages = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [partnerNames, setPartnerNames] = useState<Map<string, string>>(new Map())
 
   // Fetch messages on component mount
   useEffect(() => {
     fetchMessages()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Update selected conversation when messages change
-  useEffect(() => {
-    if (selectedConversation && conversations.length > 0) {
-      const updatedConversation = conversations.find(
-        conv => conv.partnerId === selectedConversation.partnerId
-      )
-      if (updatedConversation) {
-        setSelectedConversation(updatedConversation)
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, selectedConversation?.partnerId])
 
   const fetchMessages = async () => {
     try {
@@ -140,6 +129,103 @@ const Messages = () => {
     })
   }, [messages, account?.id])
 
+  // Fetch household head names for partners whose names are emails
+  useEffect(() => {
+    const fetchPartnerNames = async () => {
+      if (!account?.id || conversations.length === 0) return
+
+      const nameMap = new Map<string, string>()
+      const fetchPromises: Promise<void>[] = []
+
+      conversations.forEach((conversation) => {
+        // Check if partnerName is an email (contains @)
+        if (conversation.partnerName.includes('@')) {
+          const fetchName = async () => {
+            try {
+              // First, try to get from accounts collection
+              const accountDoc = await getDoc(doc(db, 'accounts', conversation.partnerId))
+              if (accountDoc.exists()) {
+                const accountData = accountDoc.data() as Account
+                if (accountData.role === 'household' && accountData.headOfHousehold) {
+                  nameMap.set(conversation.partnerId, accountData.headOfHousehold)
+                  return
+                }
+              }
+
+              // Try to get from resident collection
+              const residentDoc = await getDoc(doc(db, 'resident', conversation.partnerId))
+              if (residentDoc.exists()) {
+                const residentData = residentDoc.data() as Resident
+                if (residentData.householdId) {
+                  // Fetch household to get headOfHousehold
+                  const householdsRef = collection(db, 'household')
+                  const householdQuery = query(householdsRef, where('householdNumber', '==', residentData.householdId))
+                  const householdSnapshot = await getDocs(householdQuery)
+                  
+                  if (!householdSnapshot.empty) {
+                    const householdData = householdSnapshot.docs[0].data() as Household
+                    if (householdData.headOfHousehold) {
+                      nameMap.set(conversation.partnerId, householdData.headOfHousehold)
+                      return
+                    }
+                  }
+                }
+              }
+
+              // Try to get directly from household collection using partnerId
+              const householdDoc = await getDoc(doc(db, 'household', conversation.partnerId))
+              if (householdDoc.exists()) {
+                const householdData = householdDoc.data() as Household
+                if (householdData.headOfHousehold) {
+                  nameMap.set(conversation.partnerId, householdData.headOfHousehold)
+                  return
+                }
+              }
+
+              // Try to find household by email
+              const householdsRef = collection(db, 'household')
+              const householdQuery = query(householdsRef, where('email', '==', conversation.partnerName))
+              const householdSnapshot = await getDocs(householdQuery)
+              
+              if (!householdSnapshot.empty) {
+                const householdData = householdSnapshot.docs[0].data() as Household
+                if (householdData.headOfHousehold) {
+                  nameMap.set(conversation.partnerId, householdData.headOfHousehold)
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching name for partner ${conversation.partnerId}:`, error)
+            }
+          }
+          fetchPromises.push(fetchName())
+        }
+      })
+
+      await Promise.all(fetchPromises)
+      setPartnerNames(nameMap)
+    }
+
+    fetchPartnerNames()
+  }, [conversations, account?.id])
+
+  // Update selected conversation when messages change
+  useEffect(() => {
+    if (selectedConversation && conversations.length > 0) {
+      const updatedConversation = conversations.find(
+        conv => conv.partnerId === selectedConversation.partnerId
+      )
+      if (updatedConversation) {
+        // Use fetched household head name if available, otherwise use partnerName
+        const displayName = partnerNames.get(updatedConversation.partnerId) || updatedConversation.partnerName
+        setSelectedConversation({
+          ...updatedConversation,
+          partnerName: displayName
+        })
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, selectedConversation?.partnerId, partnerNames, conversations])
+
   // Filter conversations by search term
   const filteredConversations = useMemo(() => {
     if (searchTerm === '') return conversations
@@ -153,7 +239,13 @@ const Messages = () => {
 
   // Open conversation modal
   const openConversationModal = async (conversation: Conversation) => {
-    setSelectedConversation(conversation)
+    // Use fetched household head name if available, otherwise use partnerName
+    const displayName = partnerNames.get(conversation.partnerId) || conversation.partnerName
+    const conversationWithDisplayName = {
+      ...conversation,
+      partnerName: displayName
+    }
+    setSelectedConversation(conversationWithDisplayName)
     setIsModalOpen(true)
     
     // Mark all unread messages in this conversation as read
@@ -338,6 +430,8 @@ const Messages = () => {
                   const lastMessage = conversation.lastMessage
                   const isUnread = conversation.unreadCount > 0
                   const isSentByCurrentUser = lastMessage.senderId === account?.id
+                  // Use fetched household head name if available, otherwise use partnerName
+                  const displayName = partnerNames.get(conversation.partnerId) || conversation.partnerName
                   
                   return (
                     <div
@@ -351,7 +445,7 @@ const Messages = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
                             <div className={`font-semibold text-sm ${isUnread ? 'text-secondary' : 'text-gray-600'}`}>
-                              {conversation.partnerName}
+                              {displayName}
                             </div>
                             {lastMessage.attachment && (
                               <HiPaperClip className="w-4 h-4 text-gray-400" />

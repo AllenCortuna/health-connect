@@ -184,27 +184,35 @@ const Settings = () => {
                       </td>
                       <td>
                         <div className="flex flex-wrap gap-1">
-                          {resident.marginalizedGroup && resident.marginalizedGroup.length > 0 ? (
-                            resident.marginalizedGroup.map((group) => (
-                              <span
-                                key={group}
-                                className="badge badge-sm badge-outline"
-                                title={group}
-                              >
-                                {group === 'IPs'
-                                  ? "IP's"
-                                  : group === '4ps'
-                                    ? '4Ps'
-                                    : group === 'pwd'
-                                      ? 'PWD'
-                                      : group === 'solo parent'
-                                        ? 'Solo Parent'
-                                        : group.charAt(0).toUpperCase() + group.slice(1)}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-xs text-gray-400">—</span>
-                          )}
+                          {(() => {
+                            // Filter out age statuses (child, adult, senior) - only show marginalized groups
+                            const ageStatuses = ['child', 'adult', 'senior']
+                            const marginalizedGroups = resident.marginalizedGroup?.filter(
+                              group => !ageStatuses.includes(group.toLowerCase())
+                            ) || []
+                            
+                            return marginalizedGroups.length > 0 ? (
+                              marginalizedGroups.map((group) => (
+                                <span
+                                  key={group}
+                                  className="badge badge-sm badge-outline"
+                                  title={group}
+                                >
+                                  {group === 'IPs'
+                                    ? "IP's"
+                                    : group === '4ps'
+                                      ? '4Ps'
+                                      : group === 'pwd'
+                                        ? 'PWD'
+                                        : group === 'solo parent'
+                                          ? 'Solo Parent'
+                                          : group.charAt(0).toUpperCase() + group.slice(1)}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-400">—</span>
+                            )
+                          })()}
                         </div>
                       </td>
                       <td>
