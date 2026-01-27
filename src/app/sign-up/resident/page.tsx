@@ -102,10 +102,10 @@ const ResidentSignup: React.FC = () => {
                 <div className="card-body">
                     <div className="text-center mb-6">
                         <h1 className="text-2xl font-bold text-secondary">
-                            Resident Signup
+                            Household Signup
                         </h1>
                         <p className="text-secondary/60 text-xs mt-2">
-                            Create your resident account to get started
+                            Create your household account to get started
                         </p>
                     </div>
 
