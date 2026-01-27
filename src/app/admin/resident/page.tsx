@@ -166,7 +166,7 @@ const Resident = () => {
               </label>
               <input
                 type="text"
-                placeholder="Search by No. of family "
+                placeholder="Search by Family Number"
                 value={familyFilter === 'all' ? '' : familyFilter}
                 onChange={(e) => setFamilyFilter(e.target.value === '' ? 'all' : e.target.value)}
                 className="input input-bordered input-sm"
@@ -213,7 +213,7 @@ const Resident = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
-                    <th>No. of Family</th>
+                    <th>Family Number</th>
                     <th>Household Head</th>
                     <th>Gender</th>
                     <th>Marginalized Group</th>
