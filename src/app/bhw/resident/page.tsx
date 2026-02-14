@@ -5,7 +5,7 @@ import { collection, getDocs, query, orderBy, doc, updateDoc } from 'firebase/fi
 import { db } from '@/lib/firebase'
 import type { Resident } from '@/interface/user'
 import { useRouter } from 'next/navigation'
-import { FaPlus } from 'react-icons/fa'
+import { FaPlus, FaFileExport } from 'react-icons/fa'
 import ViewResidentModal from '@/components/bhw/ViewResidentModal'
 import StatusBadge from '@/components/common/StatusBadge'
 import Link from 'next/link'
@@ -121,6 +121,13 @@ const Resident = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Residents</h1>
+        <Link
+          href="/bhw/resident/export"
+          className="btn btn-outline btn-secondary btn-sm"
+        >
+          <FaFileExport className="mr-2" />
+          Export to Excel
+        </Link>
       </div>
 
       {/* Search and Filter Section */}

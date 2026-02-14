@@ -4,7 +4,7 @@ import NavLayout from '@/components/common/NavLayout'
 import { HiHome, HiUserGroup, HiUsers, HiBeaker, HiDocumentReport } from 'react-icons/hi';
 import { NavigationItemProps } from '@/components/common/NavigationItem'
 import RouteGuard from '@/components/common/RouteGuard';
-import { HiChatBubbleLeftRight, HiCog6Tooth } from 'react-icons/hi2';
+import { HiChatBubbleLeftRight, HiCog6Tooth, HiMegaphone } from 'react-icons/hi2';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -21,6 +21,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       showNotification: unreadCount > 0,
       notificationCount: unreadCount
     },
+    { href: "/admin/announcement", icon: HiMegaphone, label: "Announcements"},
     { href: "/admin/medicine", icon: HiBeaker, label: "Medicines"},
     { href: "/admin/reports", icon: HiDocumentReport, label: "Reports"},
     { href: "/admin/settings", icon: HiCog6Tooth, label: "Settings"},

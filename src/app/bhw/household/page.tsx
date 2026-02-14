@@ -5,7 +5,7 @@ import { collection, getDocs, query, doc, where, writeBatch } from 'firebase/fir
 import { db } from '@/lib/firebase'
 import type { Household } from '@/interface/user'
 import { useRouter } from 'next/navigation'
-import { FaPlus, FaTrash, FaUsers, FaEdit } from 'react-icons/fa'
+import { FaPlus, FaTrash, FaUsers, FaEdit, FaFileExport } from 'react-icons/fa'
 import Link from 'next/link'
 import { successToast, errorToast } from '@/lib/toast'
 
@@ -180,13 +180,22 @@ const Household = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-secondary">Households</h1>
-        <button
-          onClick={() => router.push('/bhw/household/add')}
-          className="btn btn-secondary btn-sm"
-        >
-          <FaPlus className="mr-2" />
-          Add Household
-        </button>
+        <div className="flex gap-2">
+          <Link
+            href="/bhw/household/export"
+            className="btn btn-outline btn-secondary btn-sm"
+          >
+            <FaFileExport className="mr-2" />
+            Export to Excel
+          </Link>
+          <button
+            onClick={() => router.push('/bhw/household/add')}
+            className="btn btn-secondary btn-sm"
+          >
+            <FaPlus className="mr-2" />
+            Add Household
+          </button>
+        </div>
       </div>
 
       {/* Search Section */}
