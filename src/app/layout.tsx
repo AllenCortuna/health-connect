@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Martian_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 
-const martianMono = Martian_Mono({
-  variable: "--font-martian-mono",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${martianMono.variable} antialiased font-mono tracking-normal text-zinc-500 text-xs font-light`}
+        className={`${poppins.variable} antialiased font-sans tracking-normal text-zinc-500 text-xs font-light`}
       >
         <ToastContainer />
         {children}
