@@ -6,13 +6,16 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.10.0",
     "idb-keyval": "^6.2.2",
+    "loadtest": "^8.2.1",
     "next": "^15.4.8",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -24,13 +27,19 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "daisyui": "^5.0.46",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.9",
     "typescript": "^5"
   }
 }

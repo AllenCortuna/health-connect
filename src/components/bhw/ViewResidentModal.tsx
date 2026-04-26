@@ -479,12 +479,12 @@ const ViewResidentModal: React.FC<ViewResidentModalProps> = ({ resident, isOpen,
                   </label>
                   <p className="text-sm">{formatDate(resident.createdAt)}</p>
                 </div>
-                <div>
+                {/* <div>
                   <label className="label">
                     <span className="label-text text-xs font-semibold">Resident Database ID</span>
                   </label>
                   <p className="font-mono text-xs">{resident.id}</p>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

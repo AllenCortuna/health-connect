@@ -20,6 +20,8 @@ interface FileWithPreview {
   isUploading?: boolean
 }
 
+const isMockUploadEnabled = process.env.NEXT_PUBLIC_MOCK_UPLOAD === 'true'
+
 // Image compression function
 const compressImage = (file: File, maxWidth: number = 1920, maxHeight: number = 1920, quality: number = 0.8): Promise<File> => {
   return new Promise((resolve, reject) => {
@@ -208,6 +210,13 @@ export default function MonthlyReportsPage() {
   }
 
   const uploadFile = async (fileWithPreview: FileWithPreview, bhwId: string, reportDate: string): Promise<string> => {
+    if (isMockUploadEnabled) {
+      // Dev-only upload simulation to test large datasets without hitting Firebase Storage.
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      const mockFileName = `${Date.now()}_${encodeURIComponent(fileWithPreview.file.name)}`
+      return `https://mock.local/monthly-reports/${bhwId}/${reportDate}/${mockFileName}`
+    }
+
     const timestamp = Date.now()
     const fileName = `monthly-reports/${bhwId}/${reportDate}/${timestamp}_${fileWithPreview.file.name}`
     const storageRef = ref(storage, fileName)
